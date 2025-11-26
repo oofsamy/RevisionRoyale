@@ -5,10 +5,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='../static/style.css') }}" type="text/css"/>
     </head>
     <body>
-        <div>
-            <h1 id="ProjectTitle">Revision Royale</h1>
-        </div>
-
-        <h1>{% block content %}{% endblock %}</h1>
+        {% block content %}
+        {% endblock %}
     </body>
 </html>

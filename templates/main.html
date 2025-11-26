@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Main - Revision Royale{% endblock %}
+{% block content %}
+    {% if Authenticated %}
+    <header class="navbar">
+        <nav class="navbar-nav">
+            <a href="" class="nav-button">My Decks</a>
+            <a href="" class="nav-button">My Timetable</a>
+        </nav>
+    </header>
+    {% endif %}
+{% endblock %}
