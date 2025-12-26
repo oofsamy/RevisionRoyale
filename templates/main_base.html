@@ -2,11 +2,11 @@
 {% block title %}Main - Revision Royale{% endblock %}
 {% block content %}
     {% if Authenticated %}
-    <h1 style="color: white; font-size: 150px;"> {{ Text }} </h1>
+    <h1 style="color: white; font-size: 150px;"> Authenticated </h1>
     <header class="navbar">
         <nav class="navbar-nav">
-            <a href="" class="nav-button">My Decks</a>
-            <a href="" class="nav-button">My Timetable</a>
+            <a href="{{ url_for('decks') }}" class="nav-button">My Decks</a>
+            <a href="{{ url_for('timetable') }}" class="nav-button">My Timetable</a>
         </nav>
     </header>
     {% endif %}

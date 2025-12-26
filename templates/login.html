@@ -2,6 +2,26 @@
 {% block title %}Login - Revision Royale{% endblock %}
 {% block content %}
 
-<h1 style="color: white; font-size: 250px;">Login Page</h1>
+<div class="centered-container">
+    <div class="login-page-content">
+        <h1>
+            Welcome Back blah blah
+        </h1>
 
+        <form method="POST" action="{{ url_for('login_post') }}">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required class="text-input">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required class="text-input">
+            </div>
+
+            <button type="submit" class="submit-button primary-button">Log In</button>
+        </form>
+        <a href="{{ url_for('register') }}" class="primary-button">Register</a>
+    </div>
+</div>
 {% endblock %}
