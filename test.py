@@ -3,6 +3,8 @@ from dataclasses import dataclass
 import sqlite3
 import os
 
+import time # have u wrote about importing this in design already??? if not, include it in development!!!
+
 @dataclass
 class Attribute:
     Name: str
@@ -101,13 +103,25 @@ class Database:
         self.GenerateTable(TableName="Timetable", PrimaryKey=Attribute("TimetableID", "INTEGER"),
                            ForeignKeyAttributes=[ForeignKeyAttribute("TimetableSlotID", "INTEGER", "TimetableSlots", "TimetableSlotID")])
 
-        self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="oofsamy"), Attributes=[AttributeValue("Level", Type=None, Value=2)])
+        # self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="oofsamy"), Attributes=[AttributeValue("HashedPassword", Type=None, Value="ExampleHash"),
+        #                                                                                                           AttributeValue("Level", Type=None, Value=2),
+        #                                                                                                           AttributeValue("LastActive", Type=None, Value=time.time()),
+        #                                                                                                           AttributeValue("JoinDate", Type=None, Value=time.time()),
+        #                                                                                                           AttributeValue("SetupComplete", Type=None, Value=1),
+        #                                                                                                           AttributeValue("Streak", Type=None, Value=1)])
+        
+        self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="oofsamy"), Attributes=[AttributeValue("Level", Type=None, Value=4)])
+        self.CreateRecord("Friends", PrimaryKey=AttributeValue("FriendID", Type=None, Value=4), Attributes=[AttributeValue("ReceiverUsername", Type=None, Value="oofsamy")])
+        self.CreateRecord("Friends", PrimaryKey=AttributeValue("FriendID", Type=None, Value=5), Attributes=[AttributeValue("ReceiverUsername", Type=None, Value="asdasd")])
+        #self.CreateRecord("FooBar", PrimaryKey=AttributeValue("ID", Type=None, Value="Test"))
 
         # self.Connection.close() I don't think you should call this until the end of the database usage.
 
     ### Generates a table within the chosen database file
     ### Required arguments are: TableName and PrimaryKey
     ### Optional arguments are: The list of normal attributes and the list of foreign key attributes
+
+    ### maybe think abt autoincrement primary key, requiring a new parameter, will make primarykey an optional parameter for CreateRecord
     def GenerateTable(self, TableName: str, PrimaryKey: Attribute, Attributes: list[Attribute] = None, ForeignKeyAttributes: list[ForeignKeyAttribute] = None) -> None:
         RecordDefinitions: list[str] = [f"{PrimaryKey.Name} {PrimaryKey.Type} PRIMARY KEY"]
 
@@ -132,22 +146,53 @@ class Database:
         os.makedirs("./Data/", exist_ok=True) # Creates the Data folder to contain the file
         DatabaseFile = open(FileName, 'w') # Creates the ProgramDatabase.db file
 
-    def CreateRecord(self, TableName: str, PrimaryKey: AttributeValue, Attributes: list[AttributeValue] = None, ForeignKeyAttributes: list[ForeignKeyAttributeValue] = None) -> None:
-        CommandString = f"INSERT INTO {TableName} (" ## Had to add a value field to the Attribute dataclass, write about how i had to change the Attribute dataclasses and make one that has values too
-        AttributeNames = [PrimaryKey.Name]
-        AttributeValues = [f"'{str(PrimaryKey.Value)}'"]
+    def CreateRecordOld(self, TableName: str, PrimaryKey: AttributeValue, Attributes: list[AttributeValue] = None, ForeignKeyAttributes: list[ForeignKeyAttributeValue] = None) -> None:
+        CommandString = f"INSERT INTO {TableName} (" ## Required for the SQL statement
+        AttributeNames = [PrimaryKey.Name] #Begins the list of attributes' names
+        AttributeValues = [f"'{str(PrimaryKey.Value)}'"] #Begins the list of attributes' values
 
         for Attribute in Attributes:
-            AttributeNames.append(Attribute.Name)
-            AttributeValues.append(f"'{str(Attribute.Value)}'")
+            AttributeNames.append(Attribute.Name) # Adds name of the attribute to the list of names
+            AttributeValues.append(f"'{str(Attribute.Value)}'") # Adds the respective value of the attribute to the list of values
 
-        AttributeNamesString = ",".join(AttributeNames)
-        AttributeValuesString = ",".join(AttributeValues)
+        AttributeNamesString = ", ".join(AttributeNames) #Converts the array into a string
+        AttributeValuesString = ", ".join(AttributeValues) #Converts the array into a string
 
-        CommandString = CommandString + AttributeNamesString + ') \n VALUES \n(' + AttributeValuesString + ');'
+        CommandString = CommandString + AttributeNamesString + ') VALUES\n(' + AttributeValuesString + ');' # Combines all strings
 
-        self.Cursor.execute(CommandString)
-        self.Connection.commit() ## create a test error where an already existign non unique pk entree is made
+        self.Cursor.execute(CommandString) ## Commits the change to persistent storage
+        self.Connection.commit()
+        
+        ## do a test where empty primary key
+        ## do a test where table doesn't exist
+        ## create a test error where an already existign non unique pk entree is made
+        ## maybe write about foreignkeyattributes being an unused variable and so its redundant in the remedial dev
+        ## do a foreign key test
+
+    def CreateRecord(self, TableName: str, PrimaryKey: AttributeValue, Attributes: list[AttributeValue] = None) -> None:
+        CommandString = f"INSERT INTO {TableName} (" ## Required for the SQL statement
+        AttributeNames = [PrimaryKey.Name] #Begins the list of attributes' names
+        AttributeValues = [f"'{str(PrimaryKey.Value)}'"] #Begins the list of attributes' values
+
+        if Attributes != None:
+            for Attribute in Attributes:
+                AttributeNames.append(Attribute.Name) # Adds name of the attribute to the list of names
+                AttributeValues.append(f"'{str(Attribute.Value)}'") # Adds the respective value of the attribute to the list of values
+        
+        AttributeNamesString = ", ".join(AttributeNames) #Converts the array into a string
+        AttributeValuesString = ", ".join(AttributeValues) #Converts the array into a string
+
+        CommandString = CommandString + AttributeNamesString + ') VALUES\n(' + AttributeValuesString + ');' # Combines all strings
+
+        try:
+            self.Cursor.execute(CommandString) ## Commits the change to persistent storage
+            self.Connection.commit()
+        except sqlite3.IntegrityError as Error:
+            print("Failure to create record, primary key is not unique.") ## then talk about how you completely change the function to return the error/success to allow for the ui to utilise the error messages instead of printing, mention how u ran into these when creating the error handling here!!!
+        except sqlite3.OperationalError as Error:
+            print("Failure to create record, table does not exist.")
+
+
 
     def GetRecord(self, TableName, Attribute, Value) -> Record:
         if (TableName == "" or Attribute == "" or Value == ""):
