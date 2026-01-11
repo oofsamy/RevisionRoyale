@@ -13,12 +13,31 @@ class ForeignKeyAttribute(Attribute):
     ForeignTable: str
     ForeignName: str
 
-class Record:
+@dataclass
+class AttributeValue(Attribute):
+    Value: any
+
+@dataclass
+class ForeignKeyAttributeValue(ForeignKeyAttribute):
+    Value: any
+
+class Table:
     def __init__(self):
         pass
 
+class Record:
+    def __init__(self): #will have a primary key attribute I believe, table attribute, 
+        pass
+
+    #def 
+
+class User(Record): # maybe have a hierarchy chart (maybe even add this post design??) of how everything inherits this base record class to make it serialisable?
+    pass
+
 class Database:
-    def __init__(self, FileName: str) -> None:
+    def __init__(self, FileName: str) -> None: ## Constructor method of Database class
+        self.CreateDatabaseFile(FileName)
+
         self.Connection = sqlite3.connect(FileName)
         self.Cursor = self.Connection.cursor()
 
@@ -50,42 +69,101 @@ class Database:
                            ForeignKeyAttributes=[ForeignKeyAttribute("Username", "TEXT", "Users", "Username"),
                                                  ForeignKeyAttribute("Subject", "TEXT", "Subjects", "SubjectName")]) ### also had to change from userid to username here, and subjectID foreign key wasn't right in the NEA design, from SubjectID to just Subject..?
 
+        ### Flashcards table is generated in case it doesn't already exist
         self.GenerateTable(TableName="Flashcards", PrimaryKey=Attribute("FlashcardID", "INTEGER"),
-                           Attributes=[])
+                           Attributes=[Attribute("FrontContent", "TEXT"),
+                                       Attribute("BackContent", "TEXT"),
+                                       Attribute("LastReviewed", "INTEGER"),
+                                       Attribute("ReviewCount", "INTEGER"),
+                                       Attribute("Priority", "INTEGER"),
+                                       Attribute("NextDue", "INTEGER"),
+                                       Attribute("Difficulty", "REAL"),
+                                       Attribute("Stability", "REAL")],
+                            ForeignKeyAttributes=[ForeignKeyAttribute("Username", "TEXT", "Users", "Username"), ## changed to username here too
+                                                  ForeignKeyAttribute("DeckID", "INTEGER", "Decks", "DeckID")]) 
+        
+        ### RevisionSessions table is generated in case it doesn't already exist
+        self.GenerateTable(TableName="RevisionSessions", PrimaryKey=Attribute("SessionID", "INTEGER"),
+                            Attributes=[Attribute("StartTime", "INTEGER"),
+                                        Attribute("Duration", "INTEGER"),
+                                        Attribute("CardsReviewed", "INTEGER")],
+                            ForeignKeyAttributes=[ForeignKeyAttribute("Username", "TEXT", "Users", "Username"), ## changed to username here too
+                                                  ForeignKeyAttribute("DeckID", "INTEGER", "Decks", "DeckID"),
+                                                  ForeignKeyAttribute("Subject", "TEXT", "Subjects", "SubjectName")])
+        
+        ### TimetableSlots table is generated in case it doesn't already exist
+        self.GenerateTable(TableName="TimetableSlots", PrimaryKey=Attribute("TimetableSlotID", "INTEGER"),
+                           Attributes=[Attribute("PlannedDuration", "INTEGER"),
+                                       Attribute("DayOfWeek", "TEXT")],
+                           ForeignKeyAttributes=[ForeignKeyAttribute("DeckID", "INTEGER", "Decks", "DeckID")])
+
+        ### Timetable table is generated in case it doesn't already exist
+        self.GenerateTable(TableName="Timetable", PrimaryKey=Attribute("TimetableID", "INTEGER"),
+                           ForeignKeyAttributes=[ForeignKeyAttribute("TimetableSlotID", "INTEGER", "TimetableSlots", "TimetableSlotID")])
+
+        self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="oofsamy"), Attributes=[AttributeValue("Level", Type=None, Value=2)])
 
         # self.Connection.close() I don't think you should call this until the end of the database usage.
 
     ### Generates a table within the chosen database file
     ### Required arguments are: TableName and PrimaryKey
     ### Optional arguments are: The list of normal attributes and the list of foreign key attributes
-    def GenerateTable(self, TableName: str, PrimaryKey: Attribute, Attributes: list[Attribute] = None, ForeignKeyAttributes: list[ForeignKeyAttribute] = None):
-        RecordDefinitions = [f"{PrimaryKey.Name} {PrimaryKey.Type} PRIMARY KEY"]
-        ## all collumn definitions must happen before foreign key restraints
+    def GenerateTable(self, TableName: str, PrimaryKey: Attribute, Attributes: list[Attribute] = None, ForeignKeyAttributes: list[ForeignKeyAttribute] = None) -> None:
+        RecordDefinitions: list[str] = [f"{PrimaryKey.Name} {PrimaryKey.Type} PRIMARY KEY"]
 
         if Attributes != None:
-            for Attribute in Attributes:
+            for Attribute in Attributes: ## Defines normal attributes columns 
                 RecordDefinitions.append(f"{Attribute.Name} {Attribute.Type}")
 
         if ForeignKeyAttributes != None:
-            for ForeignAttribute in ForeignKeyAttributes:
+            for ForeignAttribute in ForeignKeyAttributes: ## Defines foreign key attributes columns
                 RecordDefinitions.append(f"{ForeignAttribute.Name} {ForeignAttribute.Type}")
 
-            for ForeignAttribute in ForeignKeyAttributes:
+            for ForeignAttribute in ForeignKeyAttributes: ## Defines foreign key constraints
                 RecordDefinitions.append(f"FOREIGN KEY({ForeignAttribute.Name}) REFERENCES {ForeignAttribute.ForeignTable}({ForeignAttribute.ForeignName})")
 
-        RecordString = ",\n".join(RecordDefinitions)
-        CommandString = f"CREATE TABLE IF NOT EXISTS {TableName}\n({RecordString})"
-
-        print(CommandString)
+        RecordString: str = ",\n".join(RecordDefinitions)
+        CommandString: str = f"CREATE TABLE IF NOT EXISTS {TableName}\n({RecordString})" ## Required in case table already exists
 
         self.Cursor.execute(CommandString)
         self.Connection.commit()
+
+    def CreateDatabaseFile(self, FileName: str) -> None:
+        os.makedirs("./Data/", exist_ok=True) # Creates the Data folder to contain the file
+        DatabaseFile = open(FileName, 'w') # Creates the ProgramDatabase.db file
+
+    def CreateRecord(self, TableName: str, PrimaryKey: AttributeValue, Attributes: list[AttributeValue] = None, ForeignKeyAttributes: list[ForeignKeyAttributeValue] = None) -> None:
+        CommandString = f"INSERT INTO {TableName} (" ## Had to add a value field to the Attribute dataclass, write about how i had to change the Attribute dataclasses and make one that has values too
+        AttributeNames = [PrimaryKey.Name]
+        AttributeValues = [f"'{str(PrimaryKey.Value)}'"]
+
+        for Attribute in Attributes:
+            AttributeNames.append(Attribute.Name)
+            AttributeValues.append(f"'{str(Attribute.Value)}'")
+
+        AttributeNamesString = ",".join(AttributeNames)
+        AttributeValuesString = ",".join(AttributeValues)
+
+        CommandString = CommandString + AttributeNamesString + ') \n VALUES \n(' + AttributeValuesString + ');'
+
+        self.Cursor.execute(CommandString)
+        self.Connection.commit() ## create a test error where an already existign non unique pk entree is made
 
     def GetRecord(self, TableName, Attribute, Value) -> Record:
         if (TableName == "" or Attribute == "" or Value == ""):
             print("Cannot have empty arguments")
 
             return Record()
+
+        SelectString = f"SELECT * FROM {TableName} WHERE {Attribute}={Value}"
+
+        self.Cursor.execute(SelectString)
+        
+        Output = self.Cursor.fetchone()
+
+        print(Output)
+
+        ## SELECT * FROM TableName WHERE
 
         
 
@@ -120,14 +198,10 @@ class AuthenticationModule:
 
 ProgramDatabase: Database = None #PDatbase: Database typing
 
-def InitialiseProject():
-    os.makedirs("./Data/", exist_ok=True)
-    DatabaseFile = open("./Data/ProgramDatabase.db", 'w') # maybe make a new constant, this file path and also another one coz of the global ProgramDatabase variable
-
 def Main():
-    InitialiseProject()
-        
     ProgramDatabase = Database("./Data/ProgramDatabase.db")
 
-if __name__ == "__main__": # first time running app checks should be made here, such as checking if database.db file exists and blah..
+#This line of code below checks to see if the python script is being run directly (rather than a module)
+ # first time running app checks should be made here, such as checking if database.db file exists and blah..
+if __name__ == "__main__":
     Main()
