@@ -103,9 +103,12 @@ class Database:
         self.GenerateTable(TableName="Timetable", PrimaryKey=Attribute("TimetableID", "INTEGER"),
                            ForeignKeyAttributes=[ForeignKeyAttribute("TimetableSlotID", "INTEGER", "TimetableSlots", "TimetableSlotID")])
 
-        for x in range(1, 20):
-            print(self.CreateRecord(TableName="Friends", AutoIncrementPrimaryKey=True, Attributes=[AttributeValue("ReceiverUsername", Type=None, Value="oofsamy")]))
+        print(self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="oofsamy"), Attributes=[AttributeValue("Level", Type=None, Value=2)]))
+        print(self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="spidenix"), Attributes=[AttributeValue("Level", Type=None, Value=5)]))
+        print(self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="asianboy"), Attributes=[AttributeValue("Level", Type=None, Value=6)]))
 
+        self.GetRecord(TableName = "Users", Attribute=AttributeValue(Name="Level", Type=None, Value=5))
+        self.GetRecord(TableName = "Users", Attribute=AttributeValue(Name="Username", Type=None, Value="oofsamy"))
 
         # self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="oofsamy"), Attributes=[AttributeValue("HashedPassword", Type=None, Value="ExampleHash"),
         #                                                                                                           AttributeValue("Level", Type=None, Value=2),
@@ -223,15 +226,15 @@ class Database:
         
         if AutoIncrementPrimaryKey == False and AttributeValue != None: ## Validates if a primary key actually exists or if AutoIncrement is off
             AttributeNames.append(PrimaryKey.Name)
-            AttributeValues.append(f"'{str(PrimaryKey.Value)}")
+            AttributeValues.append(f"'{str(PrimaryKey.Value)}'")
 
         if Attributes != None:
             for Attribute in Attributes:
                 AttributeNames.append(Attribute.Name) # Adds name of the attribute to the list of names
                 AttributeValues.append(f"'{str(Attribute.Value)}'") # Adds the respective value of the attribute to the list of values
         
-        AttributeNamesString = ", ".join(AttributeNames) #Converts the array into a string
-        AttributeValuesString = ", ".join(AttributeValues) #Converts the array into a string
+        AttributeNamesString = ", ".join(AttributeNames) #Converts the names array into a string
+        AttributeValuesString = ", ".join(AttributeValues) #Converts the values array into a string
 
         CommandString = CommandString + AttributeNamesString + ') VALUES\n(' + AttributeValuesString + ');' # Combines all strings
 
@@ -245,26 +248,38 @@ class Database:
         else:
             return "Successfully created record into database."
 
-    def GetRecord(self, TableName, Attribute, Value) -> Record: ## boy, talk about how when testing this function, u realised the database aint saving like at all man, and u only realised via this function.
-        if (TableName == "" or Attribute == "" or Value == ""):
-            print("Cannot have empty arguments")
+    ## remember to remedial develop another stage for the GenerateTable method to return errors instead!!!
 
-            return Record()
+    def GetRecord(self, TableName: str, Attribute: AttributeValue) -> Record:
+        if TableName == "" or Attribute.Name == "" or Attribute.Value == "":
+            print("not working")
+            return Record()            
+        else:
+            SelectString = f"SELECT * FROM {TableName} WHERE {Attribute.Name} = \"{Attribute.Value}\"" ## mention how u need to check for the type, as this worked for level (int) but not username (str)
+            self.Cursor.execute(SelectString)
 
-        SelectString = f"SELECT * FROM {TableName} WHERE {Attribute}={Value}"
+            Output = self.Cursor.fetchone()
 
-        self.Cursor.execute(SelectString)
+            print(SelectString)
+            print(Output)
+
+    # def GetRecord(self, TableName, Attribute, Value) -> Record: ## boy, talk about how when testing this function, u realised the database aint saving like at all man, and u only realised via this function.
+    #         print("Cannot have empty arguments")
+
+    #         return Record()
+
+    #     SelectString = f"SELECT * FROM {TableName} WHERE {Attribute}={Value}"
+
+    #     self.Cursor.execute(SelectString)
         
-        Output = self.Cursor.fetchone()
+    #     Output = self.Cursor.fetchone()
 
-        print(Output)
+    #     print(Output)
 
         ## SELECT * FROM TableName WHERE
 
     def __del__(self): ## talk about destructor method being added here
         self.Connection.close()
-
-        
 
 class AuthenticationModule:
     def __init__():
