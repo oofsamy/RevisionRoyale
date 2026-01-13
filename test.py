@@ -53,7 +53,7 @@ class Database:
                                         Attribute("Streak", "INTEGER")])
         
         ### Friends table is generated in case it doesn't already exist
-        self.GenerateTable(TableName="Friends", PrimaryKey=Attribute("FriendID", "INTEGER"),
+        self.GenerateTable(TableName="Friends", PrimaryKey=Attribute("FriendID", "INTEGER"), AutoIncrementPrimaryKey=True,
                             Attributes=[Attribute("EstablishedDate", "INTEGER")],
                             ForeignKeyAttributes=[ForeignKeyAttribute("ReceiverUsername", "TEXT", "Users", "Username")]) #mention that you changed ReceiverUserID to ReceiverUsername
         
@@ -103,6 +103,10 @@ class Database:
         self.GenerateTable(TableName="Timetable", PrimaryKey=Attribute("TimetableID", "INTEGER"),
                            ForeignKeyAttributes=[ForeignKeyAttribute("TimetableSlotID", "INTEGER", "TimetableSlots", "TimetableSlotID")])
 
+        for x in range(1, 20):
+            print(self.CreateRecord(TableName="Friends", AutoIncrementPrimaryKey=True, Attributes=[AttributeValue("ReceiverUsername", Type=None, Value="oofsamy")]))
+
+
         # self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="oofsamy"), Attributes=[AttributeValue("HashedPassword", Type=None, Value="ExampleHash"),
         #                                                                                                           AttributeValue("Level", Type=None, Value=2),
         #                                                                                                           AttributeValue("LastActive", Type=None, Value=time.time()),
@@ -110,10 +114,16 @@ class Database:
         #                                                                                                           AttributeValue("SetupComplete", Type=None, Value=1),
         #                                                                                                           AttributeValue("Streak", Type=None, Value=1)])
         
-        self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="oofsamy"), Attributes=[AttributeValue("Level", Type=None, Value=4)])
-        self.CreateRecord("Friends", PrimaryKey=AttributeValue("FriendID", Type=None, Value=4), Attributes=[AttributeValue("ReceiverUsername", Type=None, Value="oofsamy")])
-        self.CreateRecord("Friends", PrimaryKey=AttributeValue("FriendID", Type=None, Value=5), Attributes=[AttributeValue("ReceiverUsername", Type=None, Value="asdasd")])
-        #self.CreateRecord("FooBar", PrimaryKey=AttributeValue("ID", Type=None, Value="Test"))
+        # self.Cursor.execute("SELECT * FROM Users;")
+        # print(self.Cursor.fetchall())
+
+        ##self.GetRecord(TableName="Friends", Attribute="ReceiverUsername", Value="oofsamy")
+
+        #print(self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="oofsamy"), Attributes=[AttributeValue("Level", Type=None, Value=4)]))
+        #print(self.CreateRecord("Friends", PrimaryKey=AttributeValue("FriendID", Type=None, Value=4), Attributes=[AttributeValue("ReceiverUsername", Type=None, Value="oofsamy")]))
+        #print(self.CreateRecord("Friends", PrimaryKey=AttributeValue("FriendID", Type=None, Value=5), Attributes=[AttributeValue("ReceiverUsername", Type=None, Value="asdasd")]))
+        #print(self.CreateRecord(TableName="FooBar", PrimaryKey=AttributeValue("ID", Type=None, Value="Test")))
+        #print(self.CreateRecord(TableName="Users", Attributes=[AttributeValue("Level", Type=None, Value=4)]))
 
         # self.Connection.close() I don't think you should call this until the end of the database usage.
 
@@ -122,8 +132,33 @@ class Database:
     ### Optional arguments are: The list of normal attributes and the list of foreign key attributes
 
     ### maybe think abt autoincrement primary key, requiring a new parameter, will make primarykey an optional parameter for CreateRecord
-    def GenerateTable(self, TableName: str, PrimaryKey: Attribute, Attributes: list[Attribute] = None, ForeignKeyAttributes: list[ForeignKeyAttribute] = None) -> None:
+    def GenerateTableOld(self, TableName: str, PrimaryKey: Attribute, Attributes: list[Attribute] = None, ForeignKeyAttributes: list[ForeignKeyAttribute] = None) -> None:
         RecordDefinitions: list[str] = [f"{PrimaryKey.Name} {PrimaryKey.Type} PRIMARY KEY"]
+
+        if Attributes != None:
+            for Attribute in Attributes: ## Defines normal attributes columns 
+                RecordDefinitions.append(f"{Attribute.Name} {Attribute.Type}")
+
+        if ForeignKeyAttributes != None:
+            for ForeignAttribute in ForeignKeyAttributes: ## Defines foreign key attributes columns
+                RecordDefinitions.append(f"{ForeignAttribute.Name} {ForeignAttribute.Type}")
+
+            for ForeignAttribute in ForeignKeyAttributes: ## Defines foreign key constraints
+                RecordDefinitions.append(f"FOREIGN KEY({ForeignAttribute.Name}) REFERENCES {ForeignAttribute.ForeignTable}({ForeignAttribute.ForeignName})")
+
+        RecordString: str = ",\n".join(RecordDefinitions)
+        CommandString: str = f"CREATE TABLE IF NOT EXISTS {TableName}\n({RecordString})" ## Required in case table already exists
+
+        self.Cursor.execute(CommandString)
+        self.Connection.commit()
+
+    def GenerateTable(self, TableName: str, PrimaryKey: Attribute, AutoIncrementPrimaryKey: bool = False, Attributes: list[Attribute] = None, ForeignKeyAttributes: list[ForeignKeyAttribute] = None) -> None:
+        RecordDefinitions: list[str] = []
+
+        if AutoIncrementPrimaryKey == False or PrimaryKey.Type != "INTEGER":
+            RecordDefinitions.append(f"{PrimaryKey.Name} {PrimaryKey.Type} PRIMARY KEY")
+        else:
+            RecordDefinitions.append(f"{PrimaryKey.Name} {PrimaryKey.Type} PRIMARY KEY AUTOINCREMENT")
 
         if Attributes != None:
             for Attribute in Attributes: ## Defines normal attributes columns 
@@ -144,7 +179,19 @@ class Database:
 
     def CreateDatabaseFile(self, FileName: str) -> None:
         os.makedirs("./Data/", exist_ok=True) # Creates the Data folder to contain the file
-        DatabaseFile = open(FileName, 'w') # Creates the ProgramDatabase.db file
+        DatabaseFile = open(FileName, 'w') # Creates the ProgramDatabase.db file, yep, talk about hwo u didnt know w will overwrite the file and u only realised when coding the GetRecord method
+
+# '''
+# def CreateDatabaseFile(self, FileName: str) -> None:
+#     os.makedirs("./Data/", exist_ok=True)
+#     if not os.path.exists(FileName):
+#         # Only create it if it's not there
+#         with open(FileName, 'w') as f:
+#             pass 
+#         print(f"New database created: {FileName}")
+#     else:
+#         print("Database already exists. Loading existing data.")
+# '''
 
     def CreateRecordOld(self, TableName: str, PrimaryKey: AttributeValue, Attributes: list[AttributeValue] = None, ForeignKeyAttributes: list[ForeignKeyAttributeValue] = None) -> None:
         CommandString = f"INSERT INTO {TableName} (" ## Required for the SQL statement
@@ -169,10 +216,14 @@ class Database:
         ## maybe write about foreignkeyattributes being an unused variable and so its redundant in the remedial dev
         ## do a foreign key test
 
-    def CreateRecord(self, TableName: str, PrimaryKey: AttributeValue, Attributes: list[AttributeValue] = None) -> None:
+    def CreateRecord(self, TableName: str, PrimaryKey: AttributeValue = None, AutoIncrementPrimaryKey: bool = False, Attributes: list[AttributeValue] = None) -> str: ## AutoIncrement parameter boolean, you also made PrimaryKey an optional thing since it is now
         CommandString = f"INSERT INTO {TableName} (" ## Required for the SQL statement
-        AttributeNames = [PrimaryKey.Name] #Begins the list of attributes' names
-        AttributeValues = [f"'{str(PrimaryKey.Value)}'"] #Begins the list of attributes' values
+        AttributeNames = []
+        AttributeValues = []
+        
+        if AutoIncrementPrimaryKey == False and AttributeValue != None: ## Validates if a primary key actually exists or if AutoIncrement is off
+            AttributeNames.append(PrimaryKey.Name)
+            AttributeValues.append(f"'{str(PrimaryKey.Value)}")
 
         if Attributes != None:
             for Attribute in Attributes:
@@ -185,16 +236,16 @@ class Database:
         CommandString = CommandString + AttributeNamesString + ') VALUES\n(' + AttributeValuesString + ');' # Combines all strings
 
         try:
-            self.Cursor.execute(CommandString) ## Commits the change to persistent storage
-            self.Connection.commit()
+            self.Cursor.execute(CommandString) ## Executes final command
+            self.Connection.commit() ## Commits the change to persistent storage
         except sqlite3.IntegrityError as Error:
-            print("Failure to create record, primary key is not unique.") ## then talk about how you completely change the function to return the error/success to allow for the ui to utilise the error messages instead of printing, mention how u ran into these when creating the error handling here!!!
+            return "Failure to create record, primary key is not unique."
         except sqlite3.OperationalError as Error:
-            print("Failure to create record, table does not exist.")
+            return "Failure to create record, table does not exist."
+        else:
+            return "Successfully created record into database."
 
-
-
-    def GetRecord(self, TableName, Attribute, Value) -> Record:
+    def GetRecord(self, TableName, Attribute, Value) -> Record: ## boy, talk about how when testing this function, u realised the database aint saving like at all man, and u only realised via this function.
         if (TableName == "" or Attribute == "" or Value == ""):
             print("Cannot have empty arguments")
 
@@ -209,6 +260,9 @@ class Database:
         print(Output)
 
         ## SELECT * FROM TableName WHERE
+
+    def __del__(self): ## talk about destructor method being added here
+        self.Connection.close()
 
         
 
@@ -244,7 +298,7 @@ class AuthenticationModule:
 ProgramDatabase: Database = None #PDatbase: Database typing
 
 def Main():
-    ProgramDatabase = Database("./Data/ProgramDatabase.db")
+    ProgramDatabase = Database(CONSTANTS.DEFAULT_DATABASE_LOCATION)
 
 #This line of code below checks to see if the python script is being run directly (rather than a module)
  # first time running app checks should be made here, such as checking if database.db file exists and blah..
