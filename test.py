@@ -28,10 +28,19 @@ class Table:
         pass
 
 class Record:
-    def __init__(self): #will have a primary key attribute I believe, table attribute, 
-        pass
+    def __init__(self, TableName: str = None, PrimaryKey: AttributeValue = None, Attributes: list[AttributeValue] = None): #will have a primary key attribute I believe, table attribute, 
+        self.TableName = TableName
+        self.PrimaryKey = PrimaryKey
+        self.Attributes = Attributes
 
-    #def 
+    def SetTableName(self, TableName: str) -> None:
+        self.TableName = TableName
+
+    def SetPrimaryKey(self, PrimaryKey: AttributeValue) -> None:
+        self.PrimaryKey = PrimaryKey
+
+    def AddAttribute(self, Attribute: AttributeValue):
+        self.Attributes.append(Attribute)
 
 class User(Record): # maybe have a hierarchy chart (maybe even add this post design??) of how everything inherits this base record class to make it serialisable?
     pass
@@ -103,24 +112,30 @@ class Database:
         self.GenerateTable(TableName="Timetable", PrimaryKey=Attribute("TimetableID", "INTEGER"),
                            ForeignKeyAttributes=[ForeignKeyAttribute("TimetableSlotID", "INTEGER", "TimetableSlots", "TimetableSlotID")])
 
-        print(self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="oofsamy"), Attributes=[AttributeValue("Level", Type=None, Value=2)]))
-        print(self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="spidenix"), Attributes=[AttributeValue("Level", Type=None, Value=5)]))
-        print(self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="asianboy"), Attributes=[AttributeValue("Level", Type=None, Value=6)]))
 
-        self.GetRecord(TableName = "Users", Attribute=AttributeValue(Name="Level", Type=None, Value=5))
-        self.GetRecord(TableName = "Users", Attribute=AttributeValue(Name="Username", Type=None, Value="oofsamy"))
+        #self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="oofsamy"), Attributes=[AttributeValue("HashedPassword", Type=None, Value="ExampleHash"),
+                                                                                                                  # AttributeValue("Level", Type=None, Value=2),
+                                                                                                                  # AttributeValue("LastActive", Type=None, Value=time.time()),
+                                                                                                                  # AttributeValue("JoinDate", Type=None, Value=time.time()),
+                                                                                                                  # AttributeValue("SetupComplete", Type=None, Value=1),
+                                                                                                                  # AttributeValue("Streak", Type=None, Value=1)])
 
-        # self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="oofsamy"), Attributes=[AttributeValue("HashedPassword", Type=None, Value="ExampleHash"),
-        #                                                                                                           AttributeValue("Level", Type=None, Value=2),
-        #                                                                                                           AttributeValue("LastActive", Type=None, Value=time.time()),
-        #                                                                                                           AttributeValue("JoinDate", Type=None, Value=time.time()),
-        #                                                                                                           AttributeValue("SetupComplete", Type=None, Value=1),
-        #                                                                                                           AttributeValue("Streak", Type=None, Value=1)])
+        #MyUser: Record = self.GetRecord(TableName = "Users", Attribute=AttributeValue(Name="Username", Type=None, Value="oofsamy"))
+        #MyUser: Record = self.GetRecord(TableName = "", Attribute=AttributeValue(Name = "", Type = "", Value = None))
+        #MyUser: Record = self.GetRecord(TableName = "FooBar", Attribute=AttributeValue(Name = "Username", Type = "", Value = "test"))
+        MyUser: Record = self.GetRecord(TableName = "Decks", Attribute=AttributeValue(Name = "DeckID", Type = None, Value = "Test"))
+
         
+
+        print(MyUser.TableName, MyUser.PrimaryKey, MyUser.Attributes)
+
         # self.Cursor.execute("SELECT * FROM Users;")
         # print(self.Cursor.fetchall())
 
-        ##self.GetRecord(TableName="Friends", Attribute="ReceiverUsername", Value="oofsamy")
+        #self.GetRecord(TableName="Friends", Attribute="ReceiverUsername", Value="oofsamy")
+
+        #for x in range(21):
+        #    print(self.CreateRecord("Friends", AutoIncrementPrimaryKey = True, Attributes=[AttributeValue(Name = "ReceiverUsername", Type=None, Value="spidenix")]))
 
         #print(self.CreateRecord("Users", PrimaryKey=AttributeValue("Username", Type=None, Value="oofsamy"), Attributes=[AttributeValue("Level", Type=None, Value=4)]))
         #print(self.CreateRecord("Friends", PrimaryKey=AttributeValue("FriendID", Type=None, Value=4), Attributes=[AttributeValue("ReceiverUsername", Type=None, Value="oofsamy")]))
@@ -181,20 +196,9 @@ class Database:
         self.Connection.commit()
 
     def CreateDatabaseFile(self, FileName: str) -> None:
-        os.makedirs("./Data/", exist_ok=True) # Creates the Data folder to contain the file
-        DatabaseFile = open(FileName, 'w') # Creates the ProgramDatabase.db file, yep, talk about hwo u didnt know w will overwrite the file and u only realised when coding the GetRecord method
-
-# '''
-# def CreateDatabaseFile(self, FileName: str) -> None:
-#     os.makedirs("./Data/", exist_ok=True)
-#     if not os.path.exists(FileName):
-#         # Only create it if it's not there
-#         with open(FileName, 'w') as f:
-#             pass 
-#         print(f"New database created: {FileName}")
-#     else:
-#         print("Database already exists. Loading existing data.")
-# '''
+        os.makedirs("./Data/", exist_ok=True) # Makes the folder containing the database file
+        if os.path.exists(FileName) == False: # Checks if the database file doesn't exist before creating a new one
+            DatabaseFile = open(FileName, 'w')
 
     def CreateRecordOld(self, TableName: str, PrimaryKey: AttributeValue, Attributes: list[AttributeValue] = None, ForeignKeyAttributes: list[ForeignKeyAttributeValue] = None) -> None:
         CommandString = f"INSERT INTO {TableName} (" ## Required for the SQL statement
@@ -252,21 +256,47 @@ class Database:
 
     def GetRecord(self, TableName: str, Attribute: AttributeValue) -> Record:
         if TableName == "" or Attribute.Name == "" or Attribute.Value == "":
-            print("not working")
-            return Record()            
+            return Record()
         else:
-            SelectString = f"SELECT * FROM {TableName} WHERE {Attribute.Name} = \"{Attribute.Value}\"" ## mention how u need to check for the type, as this worked for level (int) but not username (str)
+            ReturnRecord = Record()
+
+            NamesString = f"PRAGMA table_info({TableName})"
+            self.Cursor.execute(NamesString)
+
+            TableInfo = self.Cursor.fetchall() ## Returns what the select query returns, or in this case, the PRAGMA macro
+
+            PrimaryKey: AttributeValue = AttributeValue(Name="", Type="", Value=None) ## Empty Attribute
+            PrimaryKeyIndex: int = 0 ## Used to keep track of which attribute is a primary key attribute
+
+            Attributes: list[AttributeValue] = []
+
+            for Index in range(len(TableInfo)): ## Linear Search
+                if TableInfo[Index][5] == 1:
+                    PrimaryKeyIndex = Index ## The 6th entry in each record is a boolean that determines if the attribute is a primary key or not
+
+                Attributes.append(AttributeValue(Name = TableInfo[Index][1], Type = TableInfo[Index][2], Value = None))
+
+            ## Grabs the columns values, as before we only get the attributes names and types, but no values tied.
+
+            SelectString = f"SELECT * FROM {TableName} WHERE {Attribute.Name} = \"{Attribute.Value}\""
             self.Cursor.execute(SelectString)
 
             Output = self.Cursor.fetchone()
 
-            print(SelectString)
-            print(Output)
+            for Index in range(len(Output)):
+                if Index == PrimaryKeyIndex:
+                    PrimaryKey.Name = Attributes[PrimaryKeyIndex].Name
+                    PrimaryKey.Type = Attributes[PrimaryKeyIndex].Type
+                    PrimaryKey.Value = Output[Index]
+                else:
+                    Attributes[Index].Value = Output[Index]
+
+            return Record(TableName = TableName, PrimaryKey = PrimaryKey, Attributes=Attributes)
 
     # def GetRecord(self, TableName, Attribute, Value) -> Record: ## boy, talk about how when testing this function, u realised the database aint saving like at all man, and u only realised via this function.
     #         print("Cannot have empty arguments")
 
-    #         return Record()
+    #         return Record()S
 
     #     SelectString = f"SELECT * FROM {TableName} WHERE {Attribute}={Value}"
 
