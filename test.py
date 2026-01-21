@@ -2,6 +2,7 @@ import Constants as CONSTANTS
 from dataclasses import dataclass
 import sqlite3
 import os
+import werkzeug.security import generate_password_hash, check_password_hash
 
 import time  # have u wrote about importing this in design already??? if not, include it in development!!!
 
@@ -270,25 +271,16 @@ class Authentication:
 
         return True 
 
-    def HashFunction(self):
-        pass
+    def HashPassword(self, Password: str) -> str:
+        return generate_password_hash(Password)
+
+    def VerifyPassword(self, StoredHash: str, UserPassword: str) -> bool:
+        return check_password_hash(StoredHash, UserPassword)
+
 
 def Main():
     ProgramDatabase = Database(CONSTANTS.DEFAULT_DATABASE_LOCATION)
     AuthenticationModule = Authentication(ProgramDatabase)
-
-    print(AuthenticationModule.ValidateUsername("George"))
-    print(AuthenticationModule.ValidateUsername("george"))
-    print(AuthenticationModule.ValidateUsername("samy"))
-    print(AuthenticationModule.ValidateUsername("oofsamy"))
-
-    print("\nPassword Testing\n")
-    
-    print(AuthenticationModule.ValidatePasswordWithConfirmation("Password1234", "Password1234"))
-    print(AuthenticationModule.ValidatePasswordWithConfirmation("Password1234", "Fjsdfu43252"))
-    print(AuthenticationModule.ValidatePasswordWithConfirmation("fdsjf", "fdsjf"))
-    print(AuthenticationModule.ValidatePasswordWithConfirmation("f2d", "f2d"))
-
 
 if __name__ == "__main__":
     Main()
