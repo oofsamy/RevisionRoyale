@@ -3,53 +3,49 @@ from dataclasses import dataclass
 import sqlite3
 import os
 
-
-
-
-
-
-
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
-
-
-
-
-
 import time  # have u wrote about importing this in design already??? if not, include it in development!!!
+
 
 @dataclass
 class Attribute:
     Name: str
     Type: str
 
+
 @dataclass
 class ForeignKeyAttribute(Attribute):
     ForeignTable: str
     ForeignName: str
 
+
 @dataclass
 class AttributeValue(Attribute):
     Value: any
+
 
 @dataclass
 class ForeignKeyAttributeValue(ForeignKeyAttribute):
     Value: any
 
+
 class Table:
     def __init__(self):
         pass
+
 
 def ContainsDigits(String: str):
     for Character in String:
         if Character.isdigit():
             return True
-        
+
     return False
 
+
 class Record:
-    def __init__(self, TableName: str = None, PrimaryKey: AttributeValue = None, Attributes: list[AttributeValue] = None):
+    def __init__(self, TableName: str = None, PrimaryKey: AttributeValue = None,
+                 Attributes: list[AttributeValue] = None):
         self.TableName = TableName
         self.PrimaryKey = PrimaryKey
         self.Attributes = Attributes
@@ -64,11 +60,12 @@ class Record:
         self.Attributes.append(Attribute)
 
     def IsEmpty(self) -> bool:
-        return (self.TableName == "" or self.PrimaryKey == None)
+        return (self.TableName == "" or self.TableName == None or self.PrimaryKey == None)
         ## A valid record will have a Table and a PrimaryKey, if not, it is not valid
 
     def GetAttributes(self) -> list[AttributeValue]:
         return self.Attributes
+
 
 class Database:
     def __init__(self, FileName: str) -> None:  ## Constructor method of Database class
@@ -180,7 +177,8 @@ class Database:
             DatabaseFile = open(FileName, 'w')
 
     def CreateRecord(self, TableName: str, PrimaryKey: AttributeValue = None, AutoIncrementPrimaryKey: bool = False,
-                     Attributes: list[AttributeValue] = None) -> str:  ## AutoIncrement parameter boolean, you also made PrimaryKey an optional thing since it is now
+                     Attributes: list[
+                         AttributeValue] = None) -> str:  ## AutoIncrement parameter boolean, you also made PrimaryKey an optional thing since it is now
         CommandString = f"INSERT INTO {TableName} ("  ## Required for the SQL statement
         AttributeNames = []
         AttributeValues = []
@@ -271,9 +269,10 @@ class Authentication:
         if (Length < 4 or Length > 32):
             return False
 
-        UserRecord: Record = self.ProgramDatabase.GetRecord("Users", AttributeValue(Name = "Username", Type = "", Value = Username.lower()))
+        UserRecord: Record = self.ProgramDatabase.GetRecord("Users", AttributeValue(Name="Username", Type="",
+                                                                                    Value=Username.lower()))
 
-        return not UserRecord.IsEmpty()
+        return UserRecord.IsEmpty()
 
     def ValidatePassword(self, Password: str) -> bool:
         if ((len(Password) < 8) or (ContainsDigits(Password) == False)):
@@ -285,25 +284,59 @@ class Authentication:
         if ((self.ValidatePassword(Password) == False) or (Password != ConfirmedPassword)):
             return False
 
-        return True 
+        return True
 
     def HashPassword(self, Password: str) -> str:
         return generate_password_hash(Password)
 
     def VerifyPassword(self, StoredHash: str, UserPassword: str) -> bool:
         return check_password_hash(StoredHash, UserPassword)
-    
-    def Login(self, Username: str, Password: str) -> any: # not really sure what i wanna return, bool or str?
-        UserRecord: Record
-        
-        pass 
+
+    def Register(self, Username: str, Password: str, ConfirmedPassword: str) -> str:
+        if (self.ValidateUsername(Username)):
+            if (self.ValidatePasswordWithConfirmation(Password, ConfirmedPassword)):
+                RecordResult = self.ProgramDatabase.CreateRecord(TableName="Users",
+                                                             PrimaryKey=AttributeValue("Username", "TEXT", Username),
+                                                             Attributes=[
+                                                                 AttributeValue("HashedPassword", "TEXT",
+                                                                                self.HashPassword(Password)),
+                                                                 AttributeValue("Level", "INTEGER", 1),
+                                                                 AttributeValue("LastActive", "INTEGER",
+                                                                                int(time.time())),
+                                                                 AttributeValue("JoinDate", "INTEGER",
+                                                                                int(time.time())),
+                                                                 AttributeValue("SetupComplete", "INTEGER", 0),
+                                                                 AttributeValue("Streak", "INTEGER", 1)
+                                                             ])
+
+                if RecordResult == "Successfully created record into database.":
+                    return "User successfully registered"
+                else:
+                    return "User failed to register into database."
+            else:
+                return "Password does not meet requirements and/or does not match confirmed password."
+        else:
+            return "Username is not valid or already exists."
+
+    def Login(self, Username: str, Password: str) -> bool:
+        UserRecord: Record = self.ProgramDatabase.GetRecord("Users", AttributeValue(Name="Username", Type="", Value=Username))
+
+        if not UserRecord.IsEmpty():
+            PasswordAttribute: AttributeValue = GetAttributeValueFromList(UserRecord.GetAttributes(), "HashedPassword")
+
+            # Potential remedial development, i need to change the last active date whenever they login, but i havent even got that in the database module let alone the auth module, so i could remedial for both and mention the database remedial in the user remedial!!
+
+            return self.VerifyPassword(PasswordAttribute.Value, Password)
+        else:
+            return False
 
 def GetAttributeValueFromList(Attributes: list[AttributeValue], Name: str) -> AttributeValue:
     for Attribute in Attributes:
         if Attribute.Name == Name:
             return Attribute
-        
+
     return None
+
 
 class User:
     def __init__(self, Username: str, AuthModule: Authentication):
@@ -316,7 +349,8 @@ class User:
         if Record.IsEmpty() == False:
             self.Initialised = True
             self.Username = Username
-            self.HashedPassword = GetAttributeValueFromList(UserAttributes, "HashedPassword") ### COULD BE A HUGE REMEDIAL DEVELOPMENT, MAYBE THE LIST OF ATTRIBUTES IS ALREADY IN ORDER?????
+            self.HashedPassword = GetAttributeValueFromList(UserAttributes,
+                                                            "HashedPassword")  ### COULD BE A HUGE REMEDIAL DEVELOPMENT, MAYBE THE LIST OF ATTRIBUTES IS ALREADY IN ORDER?????
             self.Level = GetAttributeValueFromList(UserAttributes, "Level")
             self.LastActive = GetAttributeValueFromList(UserAttributes, "LastActive")
             self.JoinDate = GetAttributeValueFromList(UserAttributes, "JoinDate")
@@ -324,31 +358,18 @@ class User:
             self.Streak = GetAttributeValueFromList(UserAttributes, "Streak")
 
     def GetUserRecord(self, Username: str):
-        UserRecord: Record = self.AuthModule.ProgramDatabase.GetRecord("Users", AttributeValue("Username", "TEXT", Username))
+        UserRecord: Record = self.AuthModule.ProgramDatabase.GetRecord("Users",
+                                                                       AttributeValue("Username", "TEXT", Username))
 
         return Record
-
-    def CreateUser(self, Username: str, Password: str, ConfirmedPassword: str): # also not sure what to return here, this might as well be the return function man ffs 😭😭 post-comment samy, what the fuck am i on about??
-        if (self.AuthModule.ValidateUsername(Username)):
-            if (self.AuthModule.ValidatePasswordWithConfirmation(Password, ConfirmedPassword)):
-                self.AuthModule.ProgramDatabase.CreateRecord(TableName = "Users",
-                                                             PrimaryKey=AttributeValue("Username", "TEXT", Username),
-                                                             Attributes = [
-                                                                 AttributeValue("HashedPassword", "TEXT", self.AuthModule.HashPassword(Password)),
-                                                                 AttributeValue("Level", "INTEGER", 1),
-                                                                 AttributeValue("LastActive", "INTEGER", int(time.time())),
-                                                                 AttributeValue("JoinDate", "INTEGER", int(time.time())),
-                                                                 AttributeValue("SetupComplete", "INTEGER", 0),
-                                                                 AttributeValue("Streak", "INTEGER", 1)
-                                                             ])
-                
-    def Register(self, Username: str, Password: str, ConfirmedPassword: str) -> str:
-
 
 
 def Main():
     ProgramDatabase = Database(CONSTANTS.DEFAULT_DATABASE_LOCATION)
     AuthenticationModule = Authentication(ProgramDatabase)
+
+    print(AuthenticationModule.Login("oofsamy", "MyPassword123"))
+    print(AuthenticationModule.Login("oofsamy", "hndfjsbhdfu"))
 
 if __name__ == "__main__":
     Main()
