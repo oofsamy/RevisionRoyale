@@ -7,7 +7,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 import time  # have u wrote about importing this in design already??? if not, include it in development!!!
 
-
 @dataclass
 class Attribute:
     Name: str
@@ -65,6 +64,13 @@ class Record:
 
     def GetAttributes(self) -> list[AttributeValue]:
         return self.Attributes
+
+    def ChangeAttribute(self, Name: str, Value: any) -> None:## -> bool:
+        for Attribute in self.Attributes:
+            if Attribute.Name == Name:
+                Attribute.Value = Value
+
+
 
 
 class Database:
@@ -251,6 +257,10 @@ class Database:
 
             return Record(TableName=TableName, PrimaryKey=PrimaryKey, Attributes=Attributes)
 
+    ## make it so it saves every changed attribute in the database model, add this to the database module writeup as a new function entirely, remedial develop from updatelastactive, you're gonna have to make a seperate function for that holy shit
+
+    def ChangeAttribute(self, TableName: str, PrimaryKey: AttributeValue, NewAttribute: AttributeValue):
+
     def __del__(self):
         self.Connection.close()
 
@@ -318,15 +328,26 @@ class Authentication:
         else:
             return "Username is not valid or already exists."
 
+    # Potential remedial development, i need to change the last active date whenever they login, but i havent even got that in the database module let alone the auth module, so i could remedial for both and mention the database remedial in the user remedial!!
+
+    def UpdateStreak(self, UserRecord: Record) -> int:
+        pass
+
+    def UpdateLastActive(self, UserRecord: Record) -> int:
+        UserRecord.ChangeAttribute("LastActive", int(time.time()))
+
     def Login(self, Username: str, Password: str) -> bool:
         UserRecord: Record = self.ProgramDatabase.GetRecord("Users", AttributeValue(Name="Username", Type="", Value=Username))
 
         if not UserRecord.IsEmpty():
             PasswordAttribute: AttributeValue = GetAttributeValueFromList(UserRecord.GetAttributes(), "HashedPassword")
 
-            # Potential remedial development, i need to change the last active date whenever they login, but i havent even got that in the database module let alone the auth module, so i could remedial for both and mention the database remedial in the user remedial!!
+            if (self.VerifyPassword(PasswordAttribute.Value, Password)):
+                self.UpdateLastActive(UserRecord)
 
-            return self.VerifyPassword(PasswordAttribute.Value, Password)
+                return True
+            else:
+                return False
         else:
             return False
 
@@ -368,8 +389,8 @@ def Main():
     ProgramDatabase = Database(CONSTANTS.DEFAULT_DATABASE_LOCATION)
     AuthenticationModule = Authentication(ProgramDatabase)
 
-    print(AuthenticationModule.Login("oofsamy", "MyPassword123"))
-    print(AuthenticationModule.Login("oofsamy", "hndfjsbhdfu"))
+    #AuthenticationModule.Register("oofsamy", "MyPassword123", "MyPassword123")
+    AuthenticationModule.Login("oofsamy", "MyPassword123")
 
 if __name__ == "__main__":
     Main()
