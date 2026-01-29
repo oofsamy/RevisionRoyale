@@ -15,6 +15,16 @@ app.secret_key = dotenv_values(".env")["SECRET_KEY"]
 ProgramDatabase = Database(constants.DEFAULT_DATABASE_LOCATION)
 AuthenticationModule = Authentication(ProgramDatabase)
 
+### Website Endpoint Routes
+
+@app.route("/login", methods=["GET", "POST"])
+def LoginPage():
+    return "Login Page Accessed"
+
+@app.route("/register", methods=["GET", "POST"])
+def RegisterPage():
+    return "Register Page Accessed"
+
 @app.route("/", methods=["GET"])
 def Index():
     return render_template("startup.html")

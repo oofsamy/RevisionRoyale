@@ -7,10 +7,9 @@
         <p class="sub-title">A study app.</p>
 
         <div class="buttons-container">
-
+            <a href="{{ url_for('LoginPage') }}" class="primary-button">Log in</a>
+            <a href="{{ url_for('RegisterPage') }}" class="primary-button">Register</a>
         </div>
     </div>
 </div>
 {% endblock %}
-            <a href="{{ url_for('login') }}" class="primary-button">Log in</a>
-            <a href="{{ url_for('register') }}" class="primary-button">Register</a>
