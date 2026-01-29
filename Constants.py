@@ -13,3 +13,5 @@ MAX_DIFFICULTY = 10
 DEFAULT_LEVEL = 1
 
 DEFAULT_DATABASE_LOCATION = "./Data/ProgramDatabase.db"
+
+##return "Failure to create record, primary key is not unique." ## Later talk about how error codes have error messages attached to them, somewhere. Maybe create an error class with polymorphism with an overrided get error message function YES

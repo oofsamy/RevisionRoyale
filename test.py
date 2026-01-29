@@ -77,7 +77,7 @@ class Database:
     def __init__(self, FileName: str) -> None:  ## Constructor method of Database class
         self.CreateDatabaseFile(FileName)
 
-        self.Connection = sqlite3.connect(FileName)
+        self.Connection = sqlite3.connect(FileName, check_same_thread=False)
         self.Cursor = self.Connection.cursor()
 
         ### Users table is generated in case it doesn't already exist
@@ -189,7 +189,7 @@ class Database:
         AttributeNames = []
         AttributeValues = []
 
-        if AutoIncrementPrimaryKey == False and AttributeValue != None:  ## Validates if a primary key actually exists or if AutoIncrement is off
+        if AutoIncrementPrimaryKey == False and PrimaryKey != None:  ## Validates if a primary key actually exists or if AutoIncrement is off
             AttributeNames.append(PrimaryKey.Name)
             AttributeValues.append(f"'{str(PrimaryKey.Value)}'")
 
@@ -360,7 +360,7 @@ class Authentication:
     def UpdateStreak(self, UserRecord: Record):
         CurrentTime: int = int(time.time())
         CurrentDayNumber = CurrentTime // 86400 # Dividing the seconds by 86400 (the number of seconds in a day)
-        LastDayNumber = GetAttributeValueFromList(UserRecord.GetAttributes(), "LastActive") // 86400 # Dividing the seconds by 86400 (the number of seconds in a day)
+        LastDayNumber = GetAttributeValueFromList(UserRecord.GetAttributes(), "LastActive").Value // 86400 # Dividing the seconds by 86400 (the number of seconds in a day)
 
         if CurrentDayNumber == LastDayNumber: ## Not a new day login
             pass
@@ -375,6 +375,10 @@ class Authentication:
         UserRecord.ChangeAttribute("LastActive", int(time.time()))
         self.ProgramDatabase.SaveRecord(UserRecord)
 
+
+ 
+    ## remedial development this, lastactive cannot be called before streak because it messes up the streak logic, update streak first
+
     def Login(self, Username: str, Password: str) -> bool:
         UserRecord: Record = self.ProgramDatabase.GetRecord("Users", AttributeValue(Name="Username", Type="", Value=Username))
 
@@ -382,8 +386,8 @@ class Authentication:
             PasswordAttribute: AttributeValue = GetAttributeValueFromList(UserRecord.GetAttributes(), "HashedPassword")
 
             if (self.VerifyPassword(PasswordAttribute.Value, Password)):
-                self.UpdateLastActive(UserRecord)
                 self.UpdateStreak(UserRecord)
+                self.UpdateLastActive(UserRecord)
 
                 return True
             else:
@@ -432,7 +436,8 @@ def Main():
     #ProgramDatabase.SaveRecord(MyUser) ## omfg works
 
     #ProgramDatabase.SaveRecord(ProgramDatabase.GetRecord("Users", AttributeValue("Username", "", "oofsamy")))
-    AuthenticationModule.Login("oofsamy", "MyPassword123") ## 1769646902 original last active and join date, works amazing.
+    print("hello???")
+    print(AuthenticationModule.Login("oofsamy", "MyPassword123")) ## 1769646902 original last active and join date, works amazing.
 
 if __name__ == "__main__":
     Main()
