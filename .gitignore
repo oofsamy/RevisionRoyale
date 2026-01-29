@@ -1,0 +1,5 @@
+.env
+**/DBBrowser
+**/__pycache__
+**/*.pyc
+*.lnk

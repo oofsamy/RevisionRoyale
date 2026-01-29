@@ -12,4 +12,4 @@ MAX_DIFFICULTY = 10
 
 DEFAULT_LEVEL = 1
 
-DEFAULT_DATABASE_LOCATION = "./Data/ProgramDatabase.db"
+DEFAULT_DATABASE_LOCATION = "./data/ProgramDatabase.db"
