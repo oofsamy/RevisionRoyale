@@ -12,27 +12,18 @@ class Attribute:
     Name: str
     Type: str
 
-
 @dataclass
 class ForeignKeyAttribute(Attribute):
     ForeignTable: str
     ForeignName: str
 
-
 @dataclass
 class AttributeValue(Attribute):
     Value: any
 
-
 @dataclass
 class ForeignKeyAttributeValue(ForeignKeyAttribute):
     Value: any
-
-
-class Table:
-    def __init__(self):
-        pass
-
 
 def ContainsDigits(String: str):
     for Character in String:
@@ -40,7 +31,6 @@ def ContainsDigits(String: str):
             return True
 
     return False
-
 
 class Record:
     def __init__(self, TableName: str = None, PrimaryKey: AttributeValue = None,
@@ -64,14 +54,24 @@ class Record:
 
     def GetAttributes(self) -> list[AttributeValue]:
         return self.Attributes
+    
+    def GetTableName(self) -> str:
+        return self.TableName
+    
+    def GetPrimaryKey(self) -> AttributeValue:
+        return self.PrimaryKey
 
-    def ChangeAttribute(self, Name: str, Value: any) -> None:## -> bool:
-        for Attribute in self.Attributes:
+    def ChangeAttribute(self, Name: str, Value: any) -> None:
+        CurrentAttributes: list[AttributeValue] = self.Attributes
+ 
+        if Name == self.PrimaryKey.Name:
+            return
+
+        for Attribute in CurrentAttributes:
             if Attribute.Name == Name:
                 Attribute.Value = Value
 
-
-
+        self.Attributes = CurrentAttributes
 
 class Database:
     def __init__(self, FileName: str) -> None:  ## Constructor method of Database class
@@ -257,13 +257,39 @@ class Database:
 
             return Record(TableName=TableName, PrimaryKey=PrimaryKey, Attributes=Attributes)
 
-    ## make it so it saves every changed attribute in the database model, add this to the database module writeup as a new function entirely, remedial develop from updatelastactive, you're gonna have to make a seperate function for that holy shit
+    ## incase its important, GetAttributes also adds the primary key attribute
 
-    def ChangeAttribute(self, TableName: str, PrimaryKey: AttributeValue, NewAttribute: AttributeValue):
+    def SaveRecord(self, PassedRecord: Record) -> str:
+        if PassedRecord == None or PassedRecord.IsEmpty():
+            return "Invalid record passed."
+
+        CommandString = f"UPDATE {PassedRecord.GetTableName()} SET\n" ## Begins the SQL command to be executed
+        Definitions: list[str] = []
+ 
+        for Attribute in PassedRecord.GetAttributes():
+            if Attribute.Name != PassedRecord.GetPrimaryKey().Name: ## Checks if attribute is the primary key attribute
+                Definitions.append(f"{Attribute.Name} = \'{Attribute.Value}\'")
+                
+        CommandString = CommandString + ',\n'.join(Definitions)
+        CommandString = CommandString + f'\n WHERE {PassedRecord.GetPrimaryKey().Name} = \'{PassedRecord.GetPrimaryKey().Value}\';'
+
+        try:
+            self.Cursor.execute(CommandString)  ## Executes final command
+            self.Connection.commit()  ## Commits the change to persistent storage
+        except sqlite3.OperationalError as Error:
+            return "Failure to create record, table does not exist."
+        else:
+            return "Successfully created record into database."
 
     def __del__(self):
         self.Connection.close()
 
+def GetAttributeValueFromList(Attributes: list[AttributeValue], Name: str) -> AttributeValue:
+    for Attribute in Attributes:
+        if Attribute.Name == Name:
+            return Attribute
+
+    return None
 
 ## Mention lowercase and uppercase usernames, case sensitive
 ## Change to more efficient code, return not UserRecord.IsEmpty()
@@ -328,13 +354,26 @@ class Authentication:
         else:
             return "Username is not valid or already exists."
 
-    # Potential remedial development, i need to change the last active date whenever they login, but i havent even got that in the database module let alone the auth module, so i could remedial for both and mention the database remedial in the user remedial!!
 
-    def UpdateStreak(self, UserRecord: Record) -> int:
-        pass
+    ##this used to return an int idk why tho, updatelastactive im on abt
 
-    def UpdateLastActive(self, UserRecord: Record) -> int:
+    def UpdateStreak(self, UserRecord: Record):
+        CurrentTime: int = int(time.time())
+        CurrentDayNumber = CurrentTime // 86400 # Dividing the seconds by 86400 (the number of seconds in a day)
+        LastDayNumber = GetAttributeValueFromList(UserRecord.GetAttributes(), "LastActive") // 86400 # Dividing the seconds by 86400 (the number of seconds in a day)
+
+        if CurrentDayNumber == LastDayNumber: ## Not a new day login
+            pass
+        elif CurrentDayNumber == (LastDayNumber + 1): ## If the streak is consecutive by a day
+            UserRecord.ChangeAttribute("Streak", GetAttributeValueFromList(UserRecord.GetAttributes(), "Streak").Value + 1) ## Increments the user's streak
+        else: # Streak broken
+            UserRecord.ChangeAttribute("Streak", 1) ## Reset the user's streak
+
+        self.ProgramDatabase.SaveRecord(UserRecord)
+
+    def UpdateLastActive(self, UserRecord: Record): 
         UserRecord.ChangeAttribute("LastActive", int(time.time()))
+        self.ProgramDatabase.SaveRecord(UserRecord)
 
     def Login(self, Username: str, Password: str) -> bool:
         UserRecord: Record = self.ProgramDatabase.GetRecord("Users", AttributeValue(Name="Username", Type="", Value=Username))
@@ -344,20 +383,13 @@ class Authentication:
 
             if (self.VerifyPassword(PasswordAttribute.Value, Password)):
                 self.UpdateLastActive(UserRecord)
+                self.UpdateStreak(UserRecord)
 
                 return True
             else:
                 return False
         else:
             return False
-
-def GetAttributeValueFromList(Attributes: list[AttributeValue], Name: str) -> AttributeValue:
-    for Attribute in Attributes:
-        if Attribute.Name == Name:
-            return Attribute
-
-    return None
-
 
 class User:
     def __init__(self, Username: str, AuthModule: Authentication):
@@ -389,8 +421,18 @@ def Main():
     ProgramDatabase = Database(CONSTANTS.DEFAULT_DATABASE_LOCATION)
     AuthenticationModule = Authentication(ProgramDatabase)
 
+
     #AuthenticationModule.Register("oofsamy", "MyPassword123", "MyPassword123")
-    AuthenticationModule.Login("oofsamy", "MyPassword123")
+    #MyUser: Record = ProgramDatabase.GetRecord("Users", AttributeValue("Username", "", "oofsamy"))
+
+    #MyUser.SetTableName("fjmdsjfdjsf")
+
+    ##MyUser.ChangeAttribute("Level", 999)
+
+    #ProgramDatabase.SaveRecord(MyUser) ## omfg works
+
+    #ProgramDatabase.SaveRecord(ProgramDatabase.GetRecord("Users", AttributeValue("Username", "", "oofsamy")))
+    AuthenticationModule.Login("oofsamy", "MyPassword123") ## 1769646902 original last active and join date, works amazing.
 
 if __name__ == "__main__":
     Main()
