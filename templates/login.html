@@ -1,4 +1,13 @@
 {% extends "base.html" %}
+
+{% block vars %}
+<script>
+    const ClientResponse = {
+        SuccessMessage: "{{ success_message | default("") }}"
+    }
+</script>
+{% endblock %}
+
 {% block title %}Login - Revision Royale{% endblock %}
 {% block content %}
 <div class="main-container">
@@ -7,14 +16,14 @@
         <p class="subtitle">Login Page</p>
     </header>
 
-    <div class="login-card">
-        <input type="text" class="input-field" placeholder="Username">
-        <input type="password" class="input-field" placeholder="Password">
+    <form method="POST" action="/login" class="login-card">
+        <input type="text" class="input-field" name="username" placeholder="Username" required>
+        <input type="password" class="input-field" name="password" placeholder="Password" required>
 
         <div class="btn-stack">
-            <button class="btn">Log In</button>
-            <button class="btn">Register</button>
+            <button class="btn" type="submit">Log In</button>
+            <a class="btn" href="/register">Register</a>
         </div>
-    </div>
+    </form>
 </div>
 {% endblock %}
