@@ -180,7 +180,7 @@ class Database:
         self.Connection.commit()
 
     def CreateDatabaseFile(self, FileName: str) -> None:
-        os.makedirs("./Data/", exist_ok=True)  # Makes the folder containing the database file
+        os.makedirs("./data/", exist_ok=True)  # Makes the folder containing the database file
         if os.path.exists(FileName) == False:  # Checks if the database file doesn't exist before creating a new one
             DatabaseFile = open(FileName, 'w')
 
