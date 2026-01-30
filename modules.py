@@ -314,6 +314,9 @@ class Authentication:
     def VerifyPassword(self, StoredHash: str, UserPassword: str) -> bool:
         return check_password_hash(StoredHash, UserPassword)
 
+    def GetUserRecord(self, Username: str) -> Record:
+        return self.ProgramDatabase.GetRecord("Users", AttributeValue(Name="Username", Type="", Value=Username.lower()))
+
     def Register(self, Username: str, Password: str, ConfirmedPassword: str) -> str:
         if (self.ValidateUsername(Username)):
             if (self.ValidatePasswordWithConfirmation(Password, ConfirmedPassword)):

@@ -1,6 +1,6 @@
 ### Library Imports
 
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, jsonify
 from modules import *
 from dotenv import dotenv_values
 
@@ -21,20 +21,23 @@ AuthenticationModule = Authentication(ProgramDatabase)
 def DashboardPage():
     return "Dashboard Page Accessed"
 
-## <label for="username">Username:</label>
 ## maybe push out a remedial development where u improve the ui?
+
+## add script.js linking to the html file which will handle the error codes being presented
 
 @app.route("/login", methods=["GET", "POST"])
 def LoginPage():
     if request.method == 'POST':
+        print(request.form)
         UsernameInput = request.form["username"]
         PasswordInput = request.form["password"]
 
         if AuthenticationModule.Login(UsernameInput, PasswordInput):
-            session["user"] = UsernameInput
+            session["user"] = AuthenticationModule.GetUserRecord(UsernameInput)
+            print(session["user"])
             return redirect("/dashboard")
         else:
-            return render_template("login.html")
+            return render_template("login.html", success_message = "Login Failed")
         
     return render_template("login.html")
 
