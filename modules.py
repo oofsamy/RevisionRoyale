@@ -81,7 +81,7 @@ class Database:
     def __init__(self, FileName: str) -> None:
         self.CreateDatabaseFile(FileName)
 
-        self.Connection = sqlite3.connect(FileName)
+        self.Connection = sqlite3.connect(FileName, check_same_thread=False)
         self.Cursor = self.Connection.cursor()
 
         ### Users table is generated in case it doesn't already exist

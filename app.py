@@ -17,9 +17,28 @@ AuthenticationModule = Authentication(ProgramDatabase)
 
 ### Website Endpoint Routes
 
+@app.route("/dashboard", methods=["GET"]) ## mention how this was built as a placeholder for login module
+def DashboardPage():
+    return "Dashboard Page Accessed"
+
+## <label for="username">Username:</label>
+## maybe push out a remedial development where u improve the ui?
+
 @app.route("/login", methods=["GET", "POST"])
 def LoginPage():
-    return "Login Page Accessed"
+    if request.method == 'POST':
+        UsernameInput = request.form["username"]
+        PasswordInput = request.form["password"]
+
+        if AuthenticationModule.Login(UsernameInput, PasswordInput):
+            session["user"] = UsernameInput
+            return redirect("/dashboard")
+        else:
+            return render_template("login.html")
+        
+    return render_template("login.html")
+
+## error = "Invalid Login"
 
 @app.route("/register", methods=["GET", "POST"])
 def RegisterPage():
