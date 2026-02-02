@@ -7,7 +7,6 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Courier New', Courier, monospace;
 }
 
 body {
@@ -16,52 +15,82 @@ body {
     justify-content: center;
     align-items: center;
     color: white;
+    font-family: 'Courier New', Courier, monospace;
+    background: radial-gradient(circle at top right, #9b052cff, #502b5fff);
     text-align: center;
-
-    background: radial-gradient(circle at top right,
-        #9b052cff,
-        #502b5fff
-    );
 }
 
 h1 {
-    font-family: 'Royale';
+    font-family: 'Royale', 'Courier New', serif;
     font-size: 5rem;
-    font-weight: bold;
     margin-bottom: 5px;
 }
 
 .subtitle {
-    font-family: 'Royale';
-    font-size: 2rem;
+    font-family: 'Royale', 'Courier New', serif;
+    font-size: 1.8rem;
     margin-bottom: 40px;
+    opacity: 0.9;
 }
 
-/* --- Reusable Buttons --- */
+.hero-section {
+    animation: fadeIn 1.2s ease-out;
+}
+
+.split-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 80px; 
+    text-align: left; 
+    animation: slideIn 1s ease-out;
+}
+
+.text-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.login-title {
+    font-size: 4.5rem;
+    line-height: 1.1;
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+}
+
+.login-subtitle {
+    font-size: 2rem;
+    margin-bottom: 0;
+}
+
+/* --- Buttons --- */
 .btn-group {
     display: flex;
-    gap: 30px;
+    gap: 20px;
+    justify-content: center;
 }
 
 .btn-stack {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    width: 160px;
+    gap: 15px;
+    width: 100%;
+    align-items: center;
 }
 
 .btn {
     background-color: #9b052cff;
     color: white;
-    padding: 12px 25px;
+    padding: 12px 30px;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 1.2rem;
     cursor: pointer;
     text-decoration: none;
-    text-align: center;
-    font-family: inherit;
     transition: transform 0.2s, background 0.2s;
+    min-width: 180px;
+    text-align: center;
 }
 
 .btn:hover {
@@ -69,45 +98,209 @@ h1 {
     transform: scale(1.05);
 }
 
-/* --- Login Card Elements --- */
+.outline-btn {
+    background-color: transparent;
+    border: 2px solid white;
+}
+
+.secondary-link {
+    background: none;
+    font-size: 0.9rem;
+    color: #502b5f;
+    text-decoration: underline;
+    min-width: auto; /* Allow link to be smaller */
+}
+
+/* --- Login Card --- */
 .login-card {
     background-color: #e1ca9bff;
-    width: 420px;
-    padding: 50px 40px;
-    border-radius: 65px;
+    width: 380px;
+    padding: 40px;
+    border-radius: 40px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .input-field {
     width: 100%;
     background-color: #9b052cff;
-    border: none;
-    border-radius: 12px;
-    padding: 15px 20px;
-    margin-bottom: 20px;
     color: white;
-    font-size: 1.2rem;
-    font-family: inherit;
+    border: none;
+    padding: 15px 20px;
+    border-radius: 12px;
+    font-size: 1rem;
+    outline: none;
 }
 
 .input-field::placeholder {
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.7);
 }
 
-/* Small adjustments for the header on the login page */
-.login-header h1 {
-    font-size: 3.5rem;
+/* --- Animations --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.main-container
-{
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* --- Responsive Tweak --- */
+/* If the screen is too small (like a phone), stack them again */
+@media (max-width: 900px) {
+    .split-container {
+        flex-direction: column;
+        gap: 30px;
+        text-align: center;
+    }
+}
+
+/* --- Setup Page Specifics --- */
+.setup-container {
     display: flex;
+    justify-content: center;
+    align-items: center;
     width: 100%;
-    max-width: 1000px; /* Limits how far apart they spread on huge monitors */
-    justify-content: space-around; /* Distributes items with space around them */
-    align-items: center; /* Vertically centers the text with the card */
-    padding: 0 50px;
+}
+
+.wide-card {
+    width: 600px; /* Wider than login to fit two dropdowns */
+    align-items: stretch; /* Stretches children to width */
+}
+
+.card-title {
+    font-family: 'Consolas', serif;
+    font-size: 3rem;
+    color: #9b052cff;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.card-subtitle {
+    text-align: center;
+    color: #502b5f;
+    margin-bottom: 30px;
+}
+
+/* --- The Subject Rows --- */
+.subject-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    align-items: center;
+    width: 100%; /* Ensure row takes full width of card */
+}
+
+/* Styling the Dropdown Menus */
+.select-field {
+    flex: 1; /* VITAL: Makes both dropdowns grow equally */
+    cursor: pointer;
+    appearance: none;
+    /* Keeps your existing red style */
+    background-color: #9b052cff;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    border-radius: 12px;
+    font-size: 1rem;
+    outline: none;
+    /* Arrow Icon */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 15px top 50%;
+    background-size: 12px auto;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.small-btn {
+    font-size: 0.9rem;
+    padding: 8px 15px;
+    border-color: #9b052cff;
+    color: #9b052cff;
+    min-width: auto;
+}
+
+.small-btn:hover {
+    background-color: #9b052cff;
+    color: white;
+}
+
+.remove-btn {
+    background: none;
+    border: none;
+    color: #9b052cff;
+    font-weight: bold;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.remove-btn:hover {
+    color: red;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 20px;
+    z-index: 1000;
+}
+
+.nav-item {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: bold;
+    transition: color 0.3s ease;
+    flex: 1;
+    text-align: center;
+}
+
+.nav-item:hover {
+    color: white;
+}
+
+.nav-item.active {
+    color: #e1ca9bff;
+    border-bottom: 2px solid #e1ca9bff;
+}
+
+.nav-brand {
+    flex: 1;
+    text-align: center;
+    font-family: 'Royale', serif;
+    font-size: 1.4rem;
+    color: white;
+    letter-spacing: 1px;
+}
+
+.app-container {
+    margin-top: 80px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
 }

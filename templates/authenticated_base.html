@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<nav class="top-nav">
+    <a href="/dashboard" class="nav-item {{ 'active' if ActivePage == 'dashboard' }}">Dashboard</a>
+    <a href="/timetable" class="nav-item {{ 'active' if ActivePage == 'timetable' }}">Timetable</a>
+    <a href="/timer" class="nav-item {{ 'active' if ActivePage == 'timer' }}">Pomodoro Timer</a>
+    <a href="/statistics" class="nav-item {{ 'active' if ActivePage == 'statistics' }}">Statistics</a>
+    <a href="/leaderboard" class="nav-item {{ 'active' if ActivePage == 'leaderboard' }}">Leaderboard</a>
+    
+    <span class="nav-brand">Revision Royale</span>
+</nav>
+
+<div class="app-container">
+    {% block app_content %}{% endblock %}
+</div>
+{% endblock %}

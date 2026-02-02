@@ -13,3 +13,22 @@ MAX_DIFFICULTY = 10
 DEFAULT_LEVEL = 1
 
 DEFAULT_DATABASE_LOCATION = "./data/ProgramDatabase.db"
+
+PREDEFINED_SUBJECTS = ["Biology",
+                        "Business",
+                        "BTEC Level 3 National Diploma in Health and Social Care for hillee",
+                        "Chemistry",
+                        "Computer Science",
+                        "Further Maths",
+                        "Geography",
+                        "History",
+                        "Mathematics",
+                        "Media",
+                        "Physics",
+                        "Politics",
+                        "Psychology"]
+
+PREDEFINED_BOARDS = ["AQA",
+                     "Edexcel",
+                     "OCR",
+                     "Pearson"]

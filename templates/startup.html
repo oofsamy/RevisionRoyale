@@ -1,11 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Startup - Revision Royale{% endblock %}
-{% block content %}
-<h1>Revision Royale</h1>
-<p class="subtitle">A study app</p>
+{% block title %}Welcome - Revision Royale{% endblock %}
 
-<div class="btn-group">
-    <a href="{{ url_for('LoginPage')}}" class="btn">Log In</a>
-    <a href="{{ url_for('RegisterPage')}}" class="btn">Register</a>
+{% block content %}
+<div class="hero-section">
+    <h1>Revision Royale</h1>
+    <p class="subtitle">A study app.</p>
+
+    <div class="btn-group">
+        <a href="{{ url_for('LoginPage') }}" class="btn">Log In</a>
+        <a href="{{ url_for('RegisterPage') }}" class="btn outline-btn">Register</a>
+    </div>
 </div>
 {% endblock %}

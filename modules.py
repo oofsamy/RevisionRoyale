@@ -100,11 +100,14 @@ class Database:
                            ForeignKeyAttributes=[ForeignKeyAttributeValue("ReceiverUsername", "TEXT", None, "Users", "Username")])
 
         ### Subjects table is generated in case it doesn't already exist
-        self.GenerateTable(TableName="Subjects", PrimaryKey=AttributeValue("SubjectName", "TEXT", None),
-                           Attributes=[AttributeValue("ExamBoard", "TEXT", None),
+        self.GenerateTable(TableName="Subjects", PrimaryKey=AttributeValue("SubjectID", "INTEGER", None),
+                           AutoIncrementPrimaryKey=True,
+                           Attributes=[AttributeValue("SubjectName", "TEXT", None),
+                                       AttributeValue("ExamBoard", "TEXT", None),
                                        AttributeValue("TimeSpent", "INTEGER", None),
                                        AttributeValue("LastReviewed", "INTEGER", None),
-                                       AttributeValue("Priority", "REAL", None)])
+                                       AttributeValue("Priority", "REAL", None)],
+                            ForeignKeyAttributes=[ForeignKeyAttributeValue("Username", "TEXT", None, "Users", "Username")])
 
         ### Decks table is generated in case it doesn't already exist
         # mention that upon utilising sqlite, number is not a valid data type
@@ -210,6 +213,8 @@ class Database:
         except sqlite3.IntegrityError as Error:
             return "Failure to create record, primary key is not unique."
         except sqlite3.OperationalError as Error:
+            print(Error)
+            
             return "Failure to create record, table does not exist."
         else:
             return "Successfully created record into database."
@@ -279,8 +284,22 @@ class Database:
         else:
             return "Successfully created record into database."
 
+    def DeleteRecord(self, TableName: str, PrimaryKey: AttributeValue) -> bool:
+        if (TableName == "" or PrimaryKey.Name == "" or PrimaryKey.Value == ""):
+            return False
+        
+        CommandString = f"DELETE FROM {TableName} WHERE {PrimaryKey.Name} = \'{PrimaryKey.Value}\'"
+
+        try:
+            self.Cursor.execute(CommandString)  ## Executes final command
+            self.Connection.commit()  ## Commits the change to persistent storage
+        except sqlite3.OperationalError as Error:
+            return "Failure to delete record, table does not exist."
+        else:
+            return "Successfully deleted record from database."
+
     def __del__(self):
-        self.Connection.close()       
+        self.Connection.close()
 
 class Authentication:
     def __init__(self, ProgramDatabase: Database):
@@ -289,7 +308,7 @@ class Authentication:
     def ValidateUsername(self, Username: str) -> bool:
         Length: int = len(Username)
 
-        if (Length < 4 or Length > 32):
+        if (Length < constants.MIN_USERNAME_LENGTH or Length > constants.MAX_USERNAME_LENGTH):
             return False
 
         UserRecord: Record = self.ProgramDatabase.GetRecord("Users", AttributeValue(Name="Username", Type="", Value=Username.lower()))
@@ -297,7 +316,7 @@ class Authentication:
         return UserRecord.IsEmpty()
 
     def ValidatePassword(self, Password: str) -> bool:
-        if ((len(Password) < 8) or (ContainsDigits(Password) == False)):
+        if ((len(Password) < constants.MIN_PASSWORD_LENGTH) or (ContainsDigits(Password) == False)):
             return False
 
         return True
@@ -315,9 +334,9 @@ class Authentication:
         return check_password_hash(StoredHash, UserPassword)
 
     def GetUserRecord(self, Username: str) -> Record:
-        return self.ProgramDatabase.GetRecord("Users", AttributeValue(Name="Username", Type="", Value=Username.lower()))
+        return self.ProgramDatabase.GetRecord("Users", AttributeValue("Username", "", Username))
 
-    def Register(self, Username: str, Password: str, ConfirmedPassword: str) -> str:
+    def Register(self, Username: str, Password: str, ConfirmedPassword: str) -> tuple:
         if (self.ValidateUsername(Username)):
             if (self.ValidatePasswordWithConfirmation(Password, ConfirmedPassword)):
                 RecordResult = self.ProgramDatabase.CreateRecord(TableName="Users", PrimaryKey=AttributeValue("Username", "TEXT", Username),
@@ -329,13 +348,13 @@ class Authentication:
                                                                             AttributeValue("Streak", "INTEGER", 1)])
 
                 if RecordResult == "Successfully created record into database.":
-                    return "User successfully registered"
+                    return (True, "User successfully registered")
                 else:
-                    return "User failed to register into database."
+                    return (False, "User failed to register into database.")
             else:
-                return "Password does not meet requirements and/or does not match confirmed password."
+                return (False, "Password does not meet requirements and/or does not match confirmed password.")
         else:
-            return "Username is not valid or already exists."
+            return (False, "Username is not valid or already exists.")
 
     def UpdateStreak(self, UserRecord: Record):
         CurrentTime: int = int(time.time())
@@ -355,7 +374,7 @@ class Authentication:
         UserRecord.ChangeAttribute("LastActive", int(time.time()))
         self.ProgramDatabase.SaveRecord(UserRecord)
 
-    def Login(self, Username: str, Password: str) -> bool:
+    def Login(self, Username: str, Password: str) -> tuple:
         UserRecord: Record = self.ProgramDatabase.GetRecord("Users", AttributeValue(Name="Username", Type="", Value=Username))
 
         if not UserRecord.IsEmpty():
@@ -365,8 +384,8 @@ class Authentication:
                 self.UpdateStreak(UserRecord)
                 self.UpdateLastActive(UserRecord)
 
-                return True
+                return (True, "Successfully logged in.")
             else:
-                return False
+                return (False, "Password is incorrect.")
         else:
-            return False
+            return (False, "User does not exist.")

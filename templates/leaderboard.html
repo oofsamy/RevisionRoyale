@@ -1,0 +1,5 @@
+{% extends "authenticated_base.html" %}
+
+{% block app_content %}
+    <h1>Welcome to {{ ActivePage }}, {{ session['user'] }}!</h1>
+{% endblock %}

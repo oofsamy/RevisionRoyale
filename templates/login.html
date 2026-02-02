@@ -1,29 +1,30 @@
 {% extends "base.html" %}
-
-{% block vars %}
-<script>
-    const ClientResponse = {
-        SuccessMessage: "{{ success_message | default("") }}"
-    }
-</script>
-{% endblock %}
-
 {% block title %}Login - Revision Royale{% endblock %}
+
 {% block content %}
-<div class="main-container">
-    <header class="login-header">
-        <h1>Revision Royale</h1>
-        <p class="subtitle">Login Page</p>
-    </header>
+<div class="split-container">
+    
+    <div class="text-section">
+        <h1 class="login-title">Revision Royale</h1>
+        <p class="subtitle login-subtitle">A study app</p>
+    </div>
 
-    <form method="POST" action="/login" class="login-card">
-        <input type="text" class="input-field" name="username" placeholder="Username" required>
-        <input type="password" class="input-field" name="password" placeholder="Password" required>
+    <div class="login-card">
+        <form action="{{ url_for('LoginPage') }}" method="POST" class="login-form">
+            
+            {% if ErrorMessage %}
+                <p style="color: #9b052c; font-weight: bold; font-size: 0.9rem;">{{ ErrorMessage }}</p>
+            {% endif %}
 
-        <div class="btn-stack">
-            <button class="btn" type="submit">Log In</button>
-            <a class="btn" href="/register">Register</a>
-        </div>
-    </form>
+            <input type="text" name="username" class="input-field" placeholder="Username" required>
+            <input type="password" name="password" class="input-field" placeholder="Password" required>
+
+            <div class="btn-stack">
+                <button type="submit" class="btn">Log In</button>
+                <a href="{{ url_for('RegisterPage') }}" class="btn secondary-link">Need an account?</a>
+            </div>
+        </form>
+    </div>
+
 </div>
 {% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Register - Revision Royale{% endblock %}
+
+{% block content %}
+<div class="split-container">
+    
+    <div class="text-section">
+        <h1 class="login-title">Revision Royale</h1>
+        <p class="subtitle login-subtitle">A study app.</p>
+    </div>
+
+    <div class="login-card register-card">
+        <form action="{{ url_for('RegisterPage') }}" method="POST" class="login-form compact-form">
+            
+            {% if ErrorMessage %}
+                <p style="color: #9b052c; font-weight: bold; font-size: 0.9rem; margin-bottom: 5px;">{{ ErrorMessage }}</p>
+            {% endif %}
+
+            <input type="text" name="username" class="input-field" placeholder="Username" required>
+            <input type="password" name="password" class="input-field" placeholder="Password" required>
+            <input type="password" name="confirmed-password" class="input-field" placeholder="Confirm Password" required>
+
+            <div class="btn-stack">
+                <button type="submit" class="btn">Create Account</button>
+                <a href="{{ url_for('LoginPage') }}" class="btn secondary-link">Already have an account?</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
