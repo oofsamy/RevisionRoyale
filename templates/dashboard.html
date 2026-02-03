@@ -1,5 +1,32 @@
-{% extends "authenticated_base.html" %}
+{% extends "authenticated/authenticated_base.html" %}
 
 {% block app_content %}
-    <h1>Welcome back, {{ session['user'] }}!</h1>
+
+<div class="dashboard-container">
+    <h1 class="page-title">Your Subjects</h1>
+
+    <div class="subject-list-container">
+        {% if Subjects %}
+            {% for Subject in Subjects %}
+            <div class="subject-card">
+                <div class="subject-info">
+                    <h2 class="subject-name">{{ Subject.SubjectName }}</h2>
+                    <span class="exam-board-tag">{{ Subject.ExamBoard }}</span>
+                </div>
+
+                <div class="last-reviewed">
+                    <span class="label">Last Reviewed:</span>
+                    <span class="time">{{ Subject.LastReviewed }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No subjects found.</p>
+                <a href="/setup-subjects" class="btn">Add Subjects</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
 {% endblock %}
