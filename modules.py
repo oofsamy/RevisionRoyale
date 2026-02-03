@@ -253,6 +253,9 @@ class Database:
                 return Record()
 
             for Index in range(len(Output)):
+                print(Output)
+                print(len(Output))
+
                 if Index == PrimaryKeyIndex:
                     PrimaryKey.Name = Attributes[PrimaryKeyIndex].Name
                     PrimaryKey.Type = Attributes[PrimaryKeyIndex].Type
@@ -297,6 +300,61 @@ class Database:
             return "Failure to delete record, table does not exist."
         else:
             return "Successfully deleted record from database."
+
+    def GetAllRecords(self, TableName: str, Attribute: AttributeValue) -> list[Record]:
+        if TableName == "" or Attribute.Name == "" or Attribute.Value == "":
+            return []
+
+        NamesString: str = f"PRAGMA table_info({TableName})"
+        self.Cursor.execute(NamesString)
+        TableInfo = self.Cursor.fetchall()
+
+        PrimaryKeyIndex: int = 0
+        AttributeTemplate: list[AttributeValue] = []
+
+        for Index in range(len(TableInfo)):
+            if TableInfo[Index][5] == 1:
+                PrimaryKeyIndex = Index
+
+            AttributeTemplate.append(AttributeValue(Name=TableInfo[Index][1], Type=TableInfo[Index][2], Value=None))
+
+        try:
+            SelectString = f"SELECT * FROM {TableName} WHERE {Attribute.Name} = \"{Attribute.Value}\""
+            print(SelectString)
+            self.Cursor.execute(SelectString)
+        except sqlite3.OperationalError as Error:
+            return []
+
+        Output = self.Cursor.fetchall()
+
+        print(Output)
+
+        if not Output:
+            return []
+
+        FinalRecords: list[Record] = []
+
+        for Row in Output:
+            RowAttributes: list[AttributeValue] = []
+            RowPrimaryKey = None
+
+            for Index in range(len(Row)):
+                NewAttribute = AttributeValue(
+                    Name=AttributeTemplate[Index].Name,
+                    Type=AttributeTemplate[Index].Type,
+                    Value=Row[Index]
+                )
+
+                if Index == PrimaryKeyIndex:
+                    RowPrimaryKey = NewAttribute
+                else:
+                    RowAttributes.append(NewAttribute)
+
+            NewRecord = Record(PrimaryKey=RowPrimaryKey, Attributes=RowAttributes)
+            FinalRecords.append(NewRecord)
+
+        return FinalRecords
+
 
     def __del__(self):
         self.Connection.close()
