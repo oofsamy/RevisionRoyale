@@ -18,39 +18,47 @@ def DashboardPage():
     if "user" not in session:
         return render_template("login.html")
 
-    return render_template("dashboard.html", ActivePage="dashboard")
+    user_subjects = [
+        {"SubjectName": "Computer Science", "ExamBoard": "OCR", "LastReviewed": "2 days ago"},
+        {"SubjectName": "Mathematics", "ExamBoard": "Edexcel", "LastReviewed": "Today"},
+        {"SubjectName": "Physics", "ExamBoard": "AQA", "LastReviewed": "Never"},
+        {"SubjectName": "History", "ExamBoard": "WJEC", "LastReviewed": "1 week ago"},
+        {"SubjectName": "English Lit", "ExamBoard": "Eduqas", "LastReviewed": "Yesterday"},
+    ]
+
+    return render_template("authenticated/dashboard.html", ActivePage="dashboard", Subjects=user_subjects)
 
 @app.route("/timetable", methods=["GET"])
 def TimetablePage():
     if "user" not in session:
         return render_template("login.html")
 
-    return render_template("timetable.html", ActivePage="timetable")
+    return render_template("authenticated/timetable.html", ActivePage="timetable")
 
 @app.route("/timer", methods=["GET"])
 def TimerPage():
     if "user" not in session:
         return render_template("login.html")
 
-    return render_template("timer.html", ActivePage="timer")
+    return render_template("authenticated/timer.html", ActivePage="timer")
 
 @app.route("/statistics", methods=["GET"])
 def StatisticsPage():
     if "user" not in session:
         return render_template("login.html")
 
-    return render_template("statistics.html", ActivePage="statistics")
+    return render_template("authenticated/statistics.html", ActivePage="statistics")
 
 @app.route("/leaderboard", methods=["GET"])
 def LeaderboardPage():
     if "user" not in session:
         return render_template("login.html")
 
-    return render_template("leaderboard.html", ActivePage="leaderboard")
+    return render_template("authenticated/leaderboard.html", ActivePage="leaderboard")
 
 @app.route("/base_auth", methods=["GET"])
 def BaseAuthPage():
-    return render_template("authenticated_base.html")
+    return render_template("authenticated/authenticated_base.html")
 
 @app.route("/login", methods=["GET", "POST"])
 def LoginPage():
@@ -96,9 +104,24 @@ def RegisterPage():
 
 @app.route('/test', methods=["GET"])
 def Test():
-    ProgramDatabase.DeleteRecord("Users", AttributeValue("Username", "", "oofsamy"))
+    #ProgramDatabase.DeleteRecord("Users", AttributeValue("Username", "", "oofsamy"))
+    #session.pop("user", None)
+    #print(session)
 
-    return "test"
+    #return "test"
+
+    Records = ProgramDatabase.GetAllRecords("Subjects", AttributeValue("Username", "", "dihlan"))
+
+    print(Records[0].GetAttributes())
+
+    return " asda"
+
+
+@app.route('/logout', methods=["GET"])
+def Logout():
+    session.pop("user", None)
+
+    return "logged out"
 
 @app.route("/setup-subjects", methods=["GET", "POST"])
 def Setup():
@@ -143,6 +166,8 @@ def Setup():
 @app.route("/", methods=["GET"])
 def Index():
     if "user" in session:
+        print(session)
+
         return redirect("/dashboard")
 
     return render_template("startup.html")
