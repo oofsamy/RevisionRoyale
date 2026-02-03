@@ -304,3 +304,103 @@ h1 {
     display: flex;
     justify-content: center;
 }
+
+/* --- Dashboard Specifics --- */
+.dashboard-container {
+    width: 800px; /* Limits width for readability */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+}
+
+.page-title {
+    font-family: 'Royale', serif;
+    font-size: 3rem;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+/* The Scrollable Box */
+.subject-list-container {
+    width: 100%;
+    max-height: 60vh; /* Takes up 60% of the screen height */
+    overflow-y: auto; /* Enables scrolling */
+    padding-right: 15px; /* Space for scrollbar */
+
+    /* Custom Scrollbar Styling */
+    scrollbar-width: thin;
+    scrollbar-color: #e1ca9bff #9b052cff;
+}
+
+/* Webkit Scrollbar (Chrome/Safari) */
+.subject-list-container::-webkit-scrollbar {
+    width: 10px;
+}
+.subject-list-container::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+}
+.subject-list-container::-webkit-scrollbar-thumb {
+    background-color: #e1ca9bff;
+    border-radius: 10px;
+    border: 2px solid #9b052cff;
+}
+
+/* The Individual Cards */
+.subject-card {
+    background-color: white; /* Clean white look */
+    color: #333; /* Dark text for readability */
+    padding: 20px 30px;
+    border-radius: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.subject-card:hover {
+    transform: scale(1.02); /* Slight pop effect */
+}
+
+/* Card Content */
+.subject-name {
+    font-family: 'Royale', serif;
+    font-size: 1.5rem;
+    color: #9b052cff;
+    margin-bottom: 5px;
+}
+
+.exam-board-tag {
+    background-color: #e1ca9bff;
+    color: #502b5f;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.last-reviewed {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+}
+
+.last-reviewed .label {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.last-reviewed .time {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #502b5f;
+}
+
+.empty-state {
+    text-align: center;
+    color: rgba(255,255,255,0.7);
+}
