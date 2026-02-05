@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 import constants
 import sqlite3
+import arrow
 import time
 import os
 
@@ -76,6 +77,9 @@ class Record:
                 Attribute.Value = Value
 
         self.Attributes = CurrentAttributes
+
+    def GetAttribute(self, Name: str) -> AttributeValue:
+        return GetAttributeValueFromList(self.Attributes, Name)
 
 class Database:
     def __init__(self, FileName: str) -> None:
@@ -320,14 +324,11 @@ class Database:
 
         try:
             SelectString = f"SELECT * FROM {TableName} WHERE {Attribute.Name} = \"{Attribute.Value}\""
-            print(SelectString)
             self.Cursor.execute(SelectString)
         except sqlite3.OperationalError as Error:
             return []
 
         Output = self.Cursor.fetchall()
-
-        print(Output)
 
         if not Output:
             return []
@@ -354,7 +355,6 @@ class Database:
             FinalRecords.append(NewRecord)
 
         return FinalRecords
-
 
     def __del__(self):
         self.Connection.close()
@@ -417,12 +417,12 @@ class Authentication:
     def UpdateStreak(self, UserRecord: Record):
         CurrentTime: int = int(time.time())
         CurrentDayNumber = CurrentTime // 86400 # Dividing the seconds by 86400 (the number of seconds in a day)
-        LastDayNumber = GetAttributeValueFromList(UserRecord.GetAttributes(), "LastActive").Value // 86400 # Dividing the seconds by 86400 (the number of seconds in a day)
+        LastDayNumber = UserRecord.GetAttribute("LastActive").Value // 86400 # Dividing the seconds by 86400 (the number of seconds in a day)
 
         if CurrentDayNumber == LastDayNumber: ## Not a new day login
             pass
         elif CurrentDayNumber == (LastDayNumber + 1): ## If the streak is consecutive by a day
-            UserRecord.ChangeAttribute("Streak", GetAttributeValueFromList(UserRecord.GetAttributes(), "Streak").Value + 1) ## Increments the user's streak
+            UserRecord.ChangeAttribute("Streak", UserRecord.GetAttribute("Streak").Value + 1) ## Increments the user's streak
         else: # Streak broken
             UserRecord.ChangeAttribute("Streak", 1) ## Reset the user's streak
 
@@ -436,7 +436,7 @@ class Authentication:
         UserRecord: Record = self.ProgramDatabase.GetRecord("Users", AttributeValue(Name="Username", Type="", Value=Username))
 
         if not UserRecord.IsEmpty():
-            PasswordAttribute: AttributeValue = GetAttributeValueFromList(UserRecord.GetAttributes(), "HashedPassword")
+            PasswordAttribute: AttributeValue = UserRecord.GetAttribute("HashedPassword")
 
             if (self.VerifyPassword(PasswordAttribute.Value, Password)):
                 self.UpdateStreak(UserRecord)

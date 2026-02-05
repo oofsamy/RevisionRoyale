@@ -18,15 +18,24 @@ def DashboardPage():
     if "user" not in session:
         return render_template("login.html")
 
-    user_subjects = [
-        {"SubjectName": "Computer Science", "ExamBoard": "OCR", "LastReviewed": "2 days ago"},
-        {"SubjectName": "Mathematics", "ExamBoard": "Edexcel", "LastReviewed": "Today"},
-        {"SubjectName": "Physics", "ExamBoard": "AQA", "LastReviewed": "Never"},
-        {"SubjectName": "History", "ExamBoard": "WJEC", "LastReviewed": "1 week ago"},
-        {"SubjectName": "English Lit", "ExamBoard": "Eduqas", "LastReviewed": "Yesterday"},
-    ]
+    User: Record = AuthenticationModule.GetUserRecord(session["user"])
 
-    return render_template("authenticated/dashboard.html", ActivePage="dashboard", Subjects=user_subjects)
+    if User.GetAttribute("SetupComplete").Value == 0:
+        return redirect("/setup-subjects")
+
+    SubjectRecords: list[Record] = ProgramDatabase.GetAllRecords("Subjects", AttributeValue("Username", "TEXT", session["user"]))
+
+    if SubjectRecords == None or SubjectRecords == []:
+        return redirect('/setup-subjects')
+
+    Subjects = []
+
+    for Subject in SubjectRecords:
+        Subjects.append({"SubjectName": Subject.GetAttribute("SubjectName").Value,
+                         "ExamBoard": Subject.GetAttribute("ExamBoard").Value,
+                         "LastReviewed": arrow.get(Subject.GetAttribute("LastReviewed").Value).humanize()})
+
+    return render_template("authenticated/dashboard.html", ActivePage="dashboard", Subjects=Subjects)
 
 @app.route("/timetable", methods=["GET"])
 def TimetablePage():
@@ -75,7 +84,7 @@ def LoginPage():
 
             User: Record = AuthenticationModule.GetUserRecord(session["user"])
 
-            if GetAttributeValueFromList(User.GetAttributes(), "SetupComplete").Value == 0:
+            if User.GetAttribute("SetupComplete").Value == 0:
                 return redirect("/setup-subjects")
 
             return redirect("/dashboard")
@@ -110,9 +119,9 @@ def Test():
 
     #return "test"
 
-    Records = ProgramDatabase.GetAllRecords("Subjects", AttributeValue("Username", "", "dihlan"))
+    #Records = ProgramDatabase.GetAllRecords("Subjecsdfsdfts", AttributeValue("Username", "", "oofsamy"))
 
-    print(Records[0].GetAttributes())
+    #print(Records[0].GetAttributes())
 
     return " asda"
 
