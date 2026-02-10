@@ -8,7 +8,7 @@
     <div class="subject-list-container">
         {% if Subjects %}
             {% for Subject in Subjects %}
-            <div class="subject-card">
+            <a class="subject-card">
                 <div class="subject-info">
                     <h2 class="subject-name">{{ Subject.SubjectName }}</h2>
                     <span class="exam-board-tag">{{ Subject.ExamBoard }}</span>
@@ -18,15 +18,11 @@
                     <span class="label">Last Reviewed:</span>
                     <span class="time">{{ Subject.LastReviewed }}</span>
                 </div>
-            </div>
+            </a>
             {% endfor %}
-        {% else %}
-            <div class="empty-state">
-                <p>No subjects found.</p>
-                <a href="/setup-subjects" class="btn">Add Subjects</a>
-            </div>
         {% endif %}
     </div>
 </div>
 
 {% endblock %}
+
