@@ -13,9 +13,11 @@ ProgramDatabase = Database(constants.DEFAULT_DATABASE_LOCATION)
 AuthenticationModule = Authentication(ProgramDatabase)
 
 ### Website Endpoint Routes
+
+
 @app.route("/dashboard", methods=["GET"])
 def DashboardPage():
-    if "user" not in session:
+    if "user" not in session:  ## remedial development this, make it so it's meant to be
         return render_template("login.html")
 
     User: Record = AuthenticationModule.GetUserRecord(session["user"])
@@ -25,15 +27,22 @@ def DashboardPage():
 
     SubjectRecords: list[Record] = ProgramDatabase.GetAllRecords("Subjects", AttributeValue("Username", "TEXT", session["user"]))
 
-    if SubjectRecords == None or SubjectRecords == []:
+    if SubjectRecords is None or SubjectRecords == []:
         return redirect('/setup-subjects')
 
     Subjects = []
 
     for Subject in SubjectRecords:
+        LastReviewed = Subject.GetAttribute("LastReviewed").Value
+
+        if LastReviewed == 0:
+            LastReviewed = "Never Reviewed"
+        else:
+            LastReviewed = arrow.get(LastReviewed).humanize()
+
         Subjects.append({"SubjectName": Subject.GetAttribute("SubjectName").Value,
                          "ExamBoard": Subject.GetAttribute("ExamBoard").Value,
-                         "LastReviewed": arrow.get(Subject.GetAttribute("LastReviewed").Value).humanize()})
+                         "LastReviewed": LastReviewed})
 
     return render_template("authenticated/dashboard.html", ActivePage="dashboard", Subjects=Subjects)
 
@@ -175,8 +184,6 @@ def Setup():
 @app.route("/", methods=["GET"])
 def Index():
     if "user" in session:
-        print(session)
-
         return redirect("/dashboard")
 
     return render_template("startup.html")

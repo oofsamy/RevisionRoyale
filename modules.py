@@ -217,8 +217,6 @@ class Database:
         except sqlite3.IntegrityError as Error:
             return "Failure to create record, primary key is not unique."
         except sqlite3.OperationalError as Error:
-            print(Error)
-            
             return "Failure to create record, table does not exist."
         else:
             return "Successfully created record into database."
@@ -253,13 +251,10 @@ class Database:
 
             Output = self.Cursor.fetchone()
 
-            if Output == None:  ## Null-checking
+            if Output is None:  ## Null-checking
                 return Record()
 
             for Index in range(len(Output)):
-                print(Output)
-                print(len(Output))
-
                 if Index == PrimaryKeyIndex:
                     PrimaryKey.Name = Attributes[PrimaryKeyIndex].Name
                     PrimaryKey.Type = Attributes[PrimaryKeyIndex].Type
@@ -270,7 +265,7 @@ class Database:
             return Record(TableName=TableName, PrimaryKey=PrimaryKey, Attributes=Attributes)
 
     def SaveRecord(self, PassedRecord: Record) -> str:
-        if PassedRecord == None or PassedRecord.IsEmpty():
+        if PassedRecord is None or PassedRecord.IsEmpty():
             return "Invalid record passed."
 
         CommandString = f"UPDATE {PassedRecord.GetTableName()} SET\n" ## Begins the SQL command to be executed
