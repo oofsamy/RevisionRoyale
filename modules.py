@@ -37,6 +37,7 @@ def GetAttributeValueFromList(Attributes: list[AttributeValue], Name: str) -> At
 
     return None
 
+
 ## Class Definitions
 
 class Record:
@@ -81,6 +82,11 @@ class Record:
     def GetAttribute(self, Name: str) -> AttributeValue:
         return GetAttributeValueFromList(self.Attributes, Name)
 
+def GetDecksFromSubject(Subject: Record) -> list[str]:
+    DeckID: str = f"{Subject.GetAttribute('SubjectName').Value} : {Subject.GetAttribute('ExamBoard').Value}"
+
+    return constants.PREDEFINED_DECKS[DeckID]
+
 class Database:
     def __init__(self, FileName: str) -> None:
         self.CreateDatabaseFile(FileName)
@@ -118,7 +124,7 @@ class Database:
         self.GenerateTable(TableName="Decks", PrimaryKey=AttributeValue("DeckID", "INTEGER", None), AutoIncrementPrimaryKey=True,
                            Attributes=[AttributeValue("DeckName", "TEXT", None)],
                            ForeignKeyAttributes=[ForeignKeyAttributeValue("Username", "TEXT", None, "Users", "Username"),
-                                                 ForeignKeyAttributeValue("Subject", "TEXT", None, "Subjects", "SubjectName")])
+                                                 ForeignKeyAttributeValue("SubjectID", "TEXT", None, "Subjects", "SubjectID")])
 
         ### Flashcards table is generated in case it doesn't already exist
         self.GenerateTable(TableName="Flashcards", PrimaryKey=AttributeValue("FlashcardID", "INTEGER", None),
@@ -442,3 +448,22 @@ class Authentication:
                 return (False, "Password is incorrect.")
         else:
             return (False, "User does not exist.")
+
+class SubjectManagement:
+    def __init__(self, ProgramDatabase: Database, Authentication: Authentication):
+        self.ProgramDatabase = ProgramDatabase
+        self.Authentication = Authentication
+
+    def GetDecksFromSubject(Subject: Record) -> list[str]:
+        DeckID: str = f"{Subject.GetAttribute('SubjectName').Value} : {Subject.GetAttribute('ExamBoard').Value}"
+        return constants.PREDEFINED_DECKS[DeckID]
+
+    def SetupDecksForSubject(self, Subject: Record):
+        Decks = GetDecksFromSubject(Subject)
+
+        for Deck in Decks:
+            self.ProgramDatabase.CreateRecord("Decks", PrimaryKey = None, AutoIncrementPrimaryKey = True, Attributes = [
+                AttributeValue("DeckName", "TEXT", Deck),
+                AttributeValue("Username", "TEXT", Subject.GetAttribute('Username').Value),
+                AttributeValue("SubjectID", "TEXT", Subject.GetPrimaryKey().Value)
+            ])

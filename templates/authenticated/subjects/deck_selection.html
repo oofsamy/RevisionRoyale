@@ -1,1 +1,5 @@
+{% extends "authenticated/authenticated_base.html" %}
 
+{% block app_content %}
+    <h1>Welcome back, {{ session['user'] }} {{ Subject }}!</h1>
+{% endblock %}

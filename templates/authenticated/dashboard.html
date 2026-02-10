@@ -8,7 +8,7 @@
     <div class="subject-list-container">
         {% if Subjects %}
             {% for Subject in Subjects %}
-            <a class="subject-card">
+            <a href="/deck_selection?SubjectID={{Subject.SubjectID}}" class="subject-card">
                 <div class="subject-info">
                     <h2 class="subject-name">{{ Subject.SubjectName }}</h2>
                     <span class="exam-board-tag">{{ Subject.ExamBoard }}</span>

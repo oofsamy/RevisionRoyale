@@ -11,13 +11,34 @@ app.secret_key = dotenv_values(".env")["SECRET_KEY"]
 
 ProgramDatabase = Database(constants.DEFAULT_DATABASE_LOCATION)
 AuthenticationModule = Authentication(ProgramDatabase)
+SubjectManagementModule = SubjectManagement(ProgramDatabase, AuthenticationModule)
 
 ### Website Endpoint Routes
+# @app.route("/deck_selection", methods=["GET"])
+# def DeckSelectionPage():
+#     if "user" not in session:
+#         return render_template("login.html")
+    
+#     Subject = ProgramDatabase.GetRecord("Subjects", AttributeValue("SubjectID", "", request.args.get('SubjectID')))
 
+#     print(Subject.GetPrimaryKey())
+#     print(Subject.GetAttributes())
+
+#     Subject.ChangeAttribute('LastReviewed', int(time.time()))
+#     ProgramDatabase.SaveRecord(Subject)
+
+#     return render_template("authenticated/subjects/deck_selection.html", ActivePage="dashboard", Subject=Subject.GetAttribute('SubjectName').Value)
+
+@app.route("/deck_selection", methods=["GET"])
+def DeckSelectionPage():
+    if "user" not in session:
+        return render_template("login.html")
+    
+    Subject = ProgramDatabase.GetRecord("Subjects", AttributeValue("SubjectID", "INTEGER", request.args.get('SubjectID')))
 
 @app.route("/dashboard", methods=["GET"])
 def DashboardPage():
-    if "user" not in session:  ## remedial development this, make it so it's meant to be
+    if "user" not in session:
         return render_template("login.html")
 
     User: Record = AuthenticationModule.GetUserRecord(session["user"])
@@ -40,7 +61,8 @@ def DashboardPage():
         else:
             LastReviewed = arrow.get(LastReviewed).humanize()
 
-        Subjects.append({"SubjectName": Subject.GetAttribute("SubjectName").Value,
+        Subjects.append({"SubjectID" : Subject.GetPrimaryKey().Value,
+                         "SubjectName": Subject.GetAttribute("SubjectName").Value,
                          "ExamBoard": Subject.GetAttribute("ExamBoard").Value,
                          "LastReviewed": LastReviewed})
 
@@ -173,6 +195,8 @@ def Setup():
                 AttributeValue("LastReviewed", "INTEGER", 0),
                 AttributeValue("Priority", "REAL", 0)
             ])
+
+            SubjectManagementModule.SetupDecksForSubject(ProgramDatabase.GetRecord("Subjects", AttributeValue("SubjectName", "TEXT", SelectedSubjects[Index])))
 
         User.ChangeAttribute("SetupComplete", 1)
         ProgramDatabase.SaveRecord(User)
