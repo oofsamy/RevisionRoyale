@@ -315,10 +315,16 @@ h1 {
 }
 
 .page-title {
-    font-family: 'Royale', serif;
+    font-family: 'Consolas', serif;
     font-size: 3rem;
     margin-bottom: 30px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.subject-info {
+    display: flex;          /* This forces them side-by-side */
+    align-items: center;    /* Vertically aligns the text with the tag */
+    gap: 15px;              /* Adds space between the Name and the Tag */
 }
 
 /* The Scrollable Box */
@@ -349,7 +355,7 @@ h1 {
 
 /* The Individual Cards */
 .subject-card {
-    background-color: white; /* Clean white look */
+    background-color: #e1ca9bff; /* Clean white look */
     color: #333; /* Dark text for readability */
     padding: 20px 30px;
     border-radius: 15px;
@@ -359,28 +365,27 @@ h1 {
     align-items: center;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     transition: transform 0.2s;
-}
-
-.subject-card:hover {
-    transform: scale(1.02); /* Slight pop effect */
+    text-decoration: none;
 }
 
 /* Card Content */
 .subject-name {
-    font-family: 'Royale', serif;
+    font-family: 'Consolas', serif;
     font-size: 1.5rem;
     color: #9b052cff;
-    margin-bottom: 5px;
+    margin-bottom: 0;
+    margin-right: 0;
 }
 
 .exam-board-tag {
-    background-color: #e1ca9bff;
-    color: #502b5f;
-    padding: 2px 8px;
+    background-color: white;
+    color: black;
+    padding: 4px 10px;
     border-radius: 4px;
     font-size: 0.8rem;
     font-weight: bold;
     text-transform: uppercase;
+    height: fit-content;
 }
 
 .last-reviewed {
