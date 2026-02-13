@@ -82,11 +82,6 @@ class Record:
     def GetAttribute(self, Name: str) -> AttributeValue:
         return GetAttributeValueFromList(self.Attributes, Name)
 
-def GetDecksFromSubject(Subject: Record) -> list[str]:
-    DeckID: str = f"{Subject.GetAttribute('SubjectName').Value} : {Subject.GetAttribute('ExamBoard').Value}"
-
-    return constants.PREDEFINED_DECKS[DeckID]
-
 class Database:
     def __init__(self, FileName: str) -> None:
         self.CreateDatabaseFile(FileName)
@@ -454,12 +449,19 @@ class SubjectManagement:
         self.ProgramDatabase = ProgramDatabase
         self.Authentication = Authentication
 
-    def GetDecksFromSubject(Subject: Record) -> list[str]:
+    def GetDecksFromSubject(self, Subject: Record) -> list[str]:
         DeckID: str = f"{Subject.GetAttribute('SubjectName').Value} : {Subject.GetAttribute('ExamBoard').Value}"
-        return constants.PREDEFINED_DECKS[DeckID]
+
+        if DeckID in constants.PREDEFINED_DECKS:
+            return constants.PREDEFINED_DECKS[DeckID]
+        else:
+            return None
 
     def SetupDecksForSubject(self, Subject: Record):
-        Decks = GetDecksFromSubject(Subject)
+        Decks = self.GetDecksFromSubject(Subject)
+
+        if Decks is None:
+            return
 
         for Deck in Decks:
             self.ProgramDatabase.CreateRecord("Decks", PrimaryKey = None, AutoIncrementPrimaryKey = True, Attributes = [

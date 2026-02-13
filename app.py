@@ -36,6 +36,11 @@ def DeckSelectionPage():
     
     Subject = ProgramDatabase.GetRecord("Subjects", AttributeValue("SubjectID", "INTEGER", request.args.get('SubjectID')))
 
+    Subject.ChangeAttribute("LastReviewed", int(time.time()))
+    ProgramDatabase.SaveRecord(Subject)
+
+    return render_template("authenticated/subjects/deck_selection.html", ActivePage="dashboard", Subject=Subject.GetAttribute('SubjectName').Value)
+
 @app.route("/dashboard", methods=["GET"])
 def DashboardPage():
     if "user" not in session:
