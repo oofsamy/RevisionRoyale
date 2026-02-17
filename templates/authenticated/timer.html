@@ -1,5 +1,171 @@
 {% extends "authenticated/authenticated_base.html" %}
 
 {% block app_content %}
-    <h1>Welcome back, {{ session['user'] }}!</h1>
+<div class="pomodoro-full-center">
+    <h1 id="timer-title" class="timer-title hidden">Study Time</h1>
+    <div class="pomodoro-card">
+        <div id="setup-state">
+            <div class="timer-section">
+                <h2 class="section-label">Study Time</h2>
+                <div class="time-input-row">
+                    <input type="number" id="study-h" value="00" min="0">
+                    <input type="number" id="study-m" value="25" min="0">
+                    <input type="number" id="study-s" value="00" min="0">
+                </div>
+            </div>
+
+            <div class="timer-section">
+                <h2 class="section-label">Break Time</h2>
+                <div class="time-input-row">
+                    <input type="number" id="break-h" value="00" min="0">
+                    <input type="number" id="break-m" value="05" min="0">
+                    <input type="number" id="break-s" value="00" min="0">
+                </div>
+            </div>
+
+            <button id="start-btn" class="pomodoro-btn-main">Start</button>
+        </div>
+
+        <div id="active-state" class="hidden">
+            <div class="clock-display">25:00</div>
+            <div class="btn-group">
+                <button id="pause-btn" class="pomodoro-btn-sub">Pause</button>
+                <button id="cancel-btn" class="pomodoro-btn-sub">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let TimerInterval;
+let TimeLeft;
+let Paused = false;
+let CurrentMode = 'study';
+
+const SetupState = document.getElementById('setup-state');
+const ActiveState = document.getElementById('active-state');
+const ClockDisplay = document.querySelector('.clock-display');
+const TimerTitle = document.getElementById('timer-title');
+
+const StartButton = document.getElementById('start-btn');
+const PauseButton = document.getElementById('pause-btn');
+const CancelButton = document.getElementById('cancel-btn');
+
+function GetDuration(Prefix)
+{
+    const Hours = parseInt(document.getElementById(`${Prefix}-h`).value) || 0;
+    const Minutes = parseInt(document.getElementById(`${Prefix}-m`).value) || 0;
+    const Seconds = parseInt(document.getElementById(`${Prefix}-s`).value) || 0;
+
+    OverallSeconds = (Hours * 3600) + (Minutes * 60) + Seconds;
+
+    if (OverallSeconds < 0)
+    {
+        return 0
+    }
+    else
+    {
+        return OverallSeconds        
+    }
+}
+
+function FormatTime(TotalSeconds)
+{
+    const Hours = Math.floor(TotalSeconds / 3600);
+    const Minutes = Math.floor((TotalSeconds % 3600) / 60);
+    const Seconds = TotalSeconds % 60;
+
+    return [Hours, Minutes, Seconds].map(v => v.toString().padStart(2, '0')).join(':');
+}
+
+function StartTimer()
+{
+    const StudyTime = GetDuration('study');
+    const BreakTime = GetDuration('break');
+
+    if (StudyTime <= 0)
+    {
+        alert("Please enter a valid study time!");
+        return;
+    }
+
+    SetupState.classList.add('hidden');
+    ActiveState.classList.remove('hidden');
+    TimerTitle.classList.remove('hidden');
+
+    CurrentMode = 'study';
+    TimeLeft = StudyTime;
+    TimerTitle.textContent = "Study Time";
+    UpdateDisplay()
+
+    TimerInterval = setInterval(() => {
+        if (Paused == false)
+        {
+            TimeLeft = TimeLeft - 1;
+            UpdateDisplay();
+
+            if (TimeLeft <= 0)
+            {
+                HandleSwitchMode(BreakTime);
+            }
+        }
+    }, 1000);
+}
+
+function HandleSwitchMode(BreakTime)
+{
+    if (CurrentMode === "study")
+    {
+        CurrentMode = 'break';
+        TimeLeft = BreakTime;
+        TimerTitle.textContent = "Break Time";
+        alert("Study session over! Starting break.")
+    } 
+    else
+    {
+        clearInterval(TimerInterval);
+        alert("Pomodoro Cycle Complete!");
+        ResetToSetup();    
+    }
+}
+
+function UpdateDisplay() {
+    ClockDisplay.textContent = FormatTime(TimeLeft);
+}
+
+function ResetToSetup() {
+    clearInterval(TimerInterval);
+    Paused = false;
+    PauseButton.textContent = "Pause";
+    SetupState.classList.remove('hidden');
+    ActiveState.classList.add('hidden');
+    TimerTitle.classList.add('hidden');
+}
+
+StartButton.addEventListener('click', StartTimer);
+
+PauseButton.addEventListener('click', () => {
+    Paused = !Paused;
+    PauseButton.textContent = Paused ? "Resume" : "Pause";
+});
+
+CancelButton.addEventListener('click', () => {
+    ResetToSetup();
+});
+
+function PadInput(e)
+{
+    let Value = e.target.value;
+    if (Value !== "")
+    {
+        e.target.value = Value.toString().padStart(2, '0');
+    }
+}
+
+document.querySelectorAll('.time-input-row input').forEach(Input => {
+    Input.addEventListener('change', PadInput);
+    Input.addEventListener('blur', PadInput);
+})
+
+</script>
 {% endblock %}

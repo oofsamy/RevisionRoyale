@@ -166,7 +166,7 @@ def Test():
 def Logout():
     session.pop("user", None)
 
-    return "logged out"
+    return redirect("/login")
 
 @app.route("/setup-subjects", methods=["GET", "POST"])
 def Setup():
