@@ -7,7 +7,6 @@ from dataclasses import dataclass
 
 import constants
 import sqlite3
-import arrow
 import time
 import os
 
@@ -104,17 +103,9 @@ class Database:
         ### Users table is generated in case it doesn't already exist
         self.GenerateTable(TableName="Users", PrimaryKey=AttributeValue("Username", "TEXT", None),
                            Attributes=[AttributeValue("HashedPassword", "TEXT", None),
-                                       AttributeValue("Level", "REAL", None),
                                        AttributeValue("LastActive", "INTEGER", None),
-                                       AttributeValue("JoinDate", "INTEGER", None),
                                        AttributeValue("SetupComplete", "INTEGER", None),
                                        AttributeValue("Streak", "INTEGER", None)])
-
-        ### Friends table is generated in case it doesn't already exist
-        self.GenerateTable(TableName="Friends", PrimaryKey=AttributeValue("FriendID", "INTEGER", None),
-                           AutoIncrementPrimaryKey=True,
-                           Attributes=[AttributeValue("EstablishedDate", "INTEGER", None)],
-                           ForeignKeyAttributes=[ForeignKeyAttributeValue("ReceiverUsername", "TEXT", None, "Users", "Username")])
 
         ### Subjects table is generated in case it doesn't already exist
         self.GenerateTable(TableName="Subjects", PrimaryKey=AttributeValue("SubjectID", "INTEGER", None),
@@ -146,17 +137,7 @@ class Database:
                                        AttributeValue("Stability", "REAL", None)],
                            ForeignKeyAttributes=[ForeignKeyAttributeValue("Username", "TEXT", None, "Users", "Username"),
                                                  ForeignKeyAttributeValue("DeckID", "INTEGER", None, "Decks", "DeckID")])
-
-        ### RevisionSessions table is generated in case it doesn't already exist
-        self.GenerateTable(TableName="RevisionSessions", PrimaryKey=AttributeValue("SessionID", "INTEGER", None),
-                           AutoIncrementPrimaryKey=True,
-                           Attributes=[AttributeValue("StartTime", "INTEGER", None),
-                                       AttributeValue("Duration", "INTEGER", None),
-                                       AttributeValue("CardsReviewed", "INTEGER", None)],
-                           ForeignKeyAttributes=[ForeignKeyAttributeValue("Username", "TEXT", None, "Users", "Username"),
-                                                 ForeignKeyAttributeValue("DeckID", "INTEGER", None, "Decks", "DeckID"),
-                                                 ForeignKeyAttributeValue("Subject", "TEXT", None, "Subjects", "SubjectName")])
-
+        
         ### TimetableSlots table is generated in case it doesn't already exist
         self.GenerateTable(TableName="TimetableSlots", PrimaryKey=AttributeValue("TimetableSlotID", "INTEGER", None),
                            AutoIncrementPrimaryKey=True,
@@ -377,6 +358,9 @@ class Authentication:
         if (Length < constants.MIN_USERNAME_LENGTH or Length > constants.MAX_USERNAME_LENGTH):
             return False
 
+        if (' ' in Username):
+            return False
+
         UserRecord: Record = self.ProgramDatabase.GetRecord("Users", AttributeValue(Name="Username", Type="", Value=Username.lower()))
 
         return UserRecord.IsEmpty()
@@ -407,9 +391,7 @@ class Authentication:
             if (self.ValidatePasswordWithConfirmation(Password, ConfirmedPassword)):
                 RecordResult = self.ProgramDatabase.CreateRecord(TableName="Users", PrimaryKey=AttributeValue("Username", "TEXT", Username),
                                                                 Attributes=[AttributeValue("HashedPassword", "TEXT", self.HashPassword(Password)),
-                                                                            AttributeValue("Level", "INTEGER", 1),
                                                                             AttributeValue("LastActive", "INTEGER", int(time.time())),
-                                                                            AttributeValue("JoinDate", "INTEGER", int(time.time())),
                                                                             AttributeValue("SetupComplete", "INTEGER", 0),
                                                                             AttributeValue("Streak", "INTEGER", 1)])
 
@@ -533,7 +515,6 @@ class SubjectManagement:
         FlashcardRecord.ChangeAttribute("NextDue", int(UpdatedCard.due.timestamp()))
         FlashcardRecord.ChangeAttribute("ReviewCount", FlashcardData["ReviewCount"] + 1)
         FlashcardRecord.ChangeAttribute("LastReviewed", int(NowTime.timestamp()))
-
         FlashcardRecord.ChangeAttribute("Priority", UserDifficulty)
 
         self.ProgramDatabase.SaveRecord(FlashcardRecord)
