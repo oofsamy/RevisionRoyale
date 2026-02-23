@@ -484,11 +484,11 @@ class SubjectManagement:
             2: Rating.Hard,
             3: Rating.Good,
             4: Rating.Easy
-        }
+        } ## Mapping the numbers to the ratings
 
         UserRating = RatingMap.get(UserDifficulty, Rating.Good)
 
-        OldCard = Card()
+        OldCard = Card() ## Initialisng a card
 
         FlashcardRecord = self.ProgramDatabase.GetRecord("Flashcards", AttributeValue("FlashcardID", "INTEGER", FlashcardID))
 
@@ -497,7 +497,7 @@ class SubjectManagement:
         
         FlashcardData = FlashcardRecord.ConvertToDictionary()
         
-        if FlashcardData["ReviewCount"] > 0:
+        if FlashcardData["ReviewCount"] > 0: ## If it has more than 0 reviews, it's not a new card that the user is learning
             OldCard.stability = FlashcardData["Stability"]
             OldCard.difficulty = FlashcardData["Difficulty"]
             OldCard.state = State.Review
@@ -509,6 +509,8 @@ class SubjectManagement:
         NowTime = datetime.now(timezone.utc)
 
         UpdatedCard, ReviewLog = FSRSSchduler.review_card(OldCard, UserRating)
+
+        ## Saving the new flashcard to the persistent storage
 
         FlashcardRecord.ChangeAttribute("Difficulty", UpdatedCard.difficulty)
         FlashcardRecord.ChangeAttribute("Stability", UpdatedCard.stability)

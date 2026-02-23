@@ -16,11 +16,11 @@ DEFAULT_DATABASE_LOCATION = "./data/ProgramDatabase.db"
 
 PREDEFINED_SUBJECTS = ["Biology",
                         "Business",
-                        "BTEC Level 3 National Diploma in Health and Social Care for hillee",
                         "Chemistry",
                         "Computer Science",
                         "Further Maths",
                         "Geography",
+                        "Health and Social Care",
                         "History",
                         "Mathematics",
                         "Media",

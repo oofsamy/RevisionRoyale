@@ -72,8 +72,6 @@ def FlashcardReviewPage():
                 for Flashcard in NewFlashcards:
                     FlashcardsData.append(Flashcard.ConvertToDictionary())
 
-            print(FlashcardsData)
-
             return render_template("authenticated/subjects/flashcard_review.html", FlashcardsData=FlashcardsData)
         elif Mode == "FSRS":
             FlashcardsData = []
@@ -85,7 +83,6 @@ def FlashcardReviewPage():
                     if Flashcard.GetAttribute('NextDue').Value <= int(time.time()):
                         FlashcardsData.append(Flashcard.ConvertToDictionary())
 
-            print(FlashcardsData)
             return render_template("authenticated/subjects/flashcard_review.html", FlashcardsData=FlashcardsData)
 
 @app.route("/flashcard_selection", methods=["GET"])
