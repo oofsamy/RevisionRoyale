@@ -1,5 +1,66 @@
 {% extends "authenticated/authenticated_base.html" %}
 
 {% block app_content %}
-    <h1>Welcome back, {{ session['user'] }} {{ Subject }}!</h1>
+<div class="selection-container">
+    <h1 class="page-title">{{ SubjectName }}</h1>
+
+    <div class="deck-list-container">
+        {% if DecksData %}
+            {% for Deck in DecksData %}
+            <div class="deck-card">
+                <div class="selection-circle" data-id="{{ Deck['DeckID']}}" onclick="ToggleSelection(this)"></div>
+            
+                <a href="/flashcard_selection?DeckID={{Deck['DeckID']}}" class="deck-card-link">
+                    <div class="subject-info">
+                        <h2 class="subject-name">{{ Deck['DeckName'] }}</h2>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="review-actions">
+        <button class="btn" id="btn-review-all" onclick="ReviewAll()">Review All</button>
+        <button class="btn disabled-btn" id="btn-review-selected" onclick="ReviewSelected()">Review Selected</button>
+    </div>
+</div>
+
+<script>
+    function ToggleSelection(CircleElement)
+    {
+        CircleElement.classList.toggle('selected');
+
+        const SelectedCount = document.querySelectorAll('.selection-circle.selected').length;
+        const ReviewSelectedButton = document.getElementById('btn-review-selected');
+
+        if (SelectedCount > 0) {
+            ReviewSelectedButton.classList.remove('disabled-btn');
+            ReviewSelectedButton.classList.add('outline-btn');
+        } else {
+            ReviewSelectedButton.classList.add('disabled-btn');
+            ReviewSelectedButton.classList.remove('outline-btn');
+        }
+    }
+
+    function ReviewAll() {
+        const AllElements = document.querySelectorAll('.selection-circle');
+        if (AllElements.length === 0) return;
+
+        let AllIDs = [];
+        AllElements.forEach(el => AllIDs.push(el.getAttribute('data-id')));
+
+        window.location.href = `/flashcard_review?DeckID=${AllIDs.join(',')}`;
+    }
+
+    function ReviewSelected() {
+        const SelectedElements = document.querySelectorAll('.selection-circle.selected');
+        if (SelectedElements.length === 0) return;
+
+        let SelectedIDs = [];
+        SelectedElements.forEach(element => SelectedIDs.push(element.getAttribute('data-id')));
+
+        window.location.href = `/flashcard_review?DeckID=${SelectedIDs.join(',')}`;
+    }
+</script>
 {% endblock %}

@@ -1,0 +1,103 @@
+{% extends "authenticated/authenticated_base.html" %}
+
+{% block app_content %}
+<div class="deck-view-wrapper">
+    <div class="deck-big-card" id="main-card-container">
+        
+        <h1 class="deck-title">Review</h1>
+
+        <div id="flashcard-ui" class="review-content-wrapper">
+            <div class="flashcard-display">
+                <div id="flashcard-front" class="flashcard-text"></div>
+
+                <div id="flashcard-back" class="flashcard-text hidden">
+                    <hr class="flashcard-divider">
+                    <span id="flashcard-back-text"></span>
+                </div>
+            </div>
+
+            <div id="flip-controls" class="review-actions">
+                <button class="btn" onclick="flipCard()">Flip</button>
+            </div>
+
+            <div id="rate-controls" class="rate-actions hidden">
+                <button class="btn rate-btn rate-again" onclick="submitRating(1)">Again</button>
+                <button class="btn rate-btn rate-hard" onclick="submitRating(2)">Hard</button>
+                <button class="btn rate-btn rate-good" onclick="submitRating(3)">Good</button>
+                <button class="btn rate-btn rate-easy" onclick="submitRating(4)">Easy</button>
+            </div>
+        </div>
+
+        <div id="completion-message" class="hidden" style="text-align: center;">
+            <h2 style="font-family: 'Courier New', monospace; color: #502b5f; margin-bottom: 20px;">Review Complete! 🎉</h2>
+            <p style="color: #333; margin-bottom: 30px;">You have finished all due flashcards for this session.</p>
+            <a href="/dashboard" class="btn">Return to Dashboard</a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // 1. Load the Python array into a JavaScript array
+    // Safe filter converts the Jinja string safely for JS
+    const flashcardsArray = {{ FlashcardsData | tojson | safe }};
+    let currentIndex = 0;
+
+    // 2. Initialize the first card when the page loads
+    window.onload = function() {
+        loadNextCard();
+    };
+
+    function loadNextCard() {
+        // Check if we have reviewed all cards
+        if (currentIndex >= flashcardsArray.length) {
+            document.getElementById('flashcard-ui').classList.add('hidden');
+            document.getElementById('completion-message').classList.remove('hidden');
+            return;
+        }
+
+        // Get the current flashcard data
+        const currentCard = flashcardsArray[currentIndex];
+
+    // Use .trim() to strip invisible newlines or spaces from the database data
+        document.getElementById('flashcard-front').innerText = currentCard.FrontContent.trim();
+        document.getElementById('flashcard-back-text').innerText = currentCard.BackContent.trim();
+
+        // Reset the UI to the "Front-only" state
+        document.getElementById('flashcard-back').classList.add('hidden');
+        document.getElementById('flip-controls').classList.remove('hidden');
+        document.getElementById('rate-controls').classList.add('hidden');
+    }
+
+    function flipCard() {
+        document.getElementById('flashcard-back').classList.remove('hidden');
+        document.getElementById('flip-controls').classList.add('hidden');
+        document.getElementById('rate-controls').classList.remove('hidden');
+    }
+
+    function submitRating(difficultyValue) {
+        const currentCard = flashcardsArray[currentIndex];
+
+        // 1. Prepare the data to send to Flask
+        const formData = new URLSearchParams();
+        formData.append('FlashcardID', currentCard.FlashcardID);
+        formData.append('UserDifficulty', difficultyValue);
+
+        // 2. Send the POST request in the background using Fetch API
+        // Sending to /flashcard_creation as requested (though /review_endpoint might be better named!)
+        fetch('/flashcard_review', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        }).catch(error => {
+            console.error("Error saving flashcard rating:", error);
+        });
+
+        // 3. Immediately increment the index and load the next card
+        currentIndex++;
+        loadNextCard();
+    }
+</script>
+{% endblock %}

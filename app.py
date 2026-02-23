@@ -12,43 +12,122 @@ app.secret_key = dotenv_values(".env")["SECRET_KEY"]
 ProgramDatabase = Database(constants.DEFAULT_DATABASE_LOCATION)
 AuthenticationModule = Authentication(ProgramDatabase)
 SubjectManagementModule = SubjectManagement(ProgramDatabase, AuthenticationModule)
+CurrentUser: Record = None
 
-### Website Endpoint Routes
-# @app.route("/deck_selection", methods=["GET"])
-# def DeckSelectionPage():
-#     if "user" not in session:
-#         return render_template("login.html")
-    
-#     Subject = ProgramDatabase.GetRecord("Subjects", AttributeValue("SubjectID", "", request.args.get('SubjectID')))
+def AuthHandling(Session):
+    global CurrentUser
 
-#     print(Subject.GetPrimaryKey())
-#     print(Subject.GetAttributes())
+    if "user" not in Session:
+        return redirect("/login")
 
-#     Subject.ChangeAttribute('LastReviewed', int(time.time()))
-#     ProgramDatabase.SaveRecord(Subject)
+    if CurrentUser is None or CurrentUser.IsEmpty():
+        CurrentUser = AuthenticationModule.GetUserRecord(session["user"])
 
-#     return render_template("authenticated/subjects/deck_selection.html", ActivePage="dashboard", Subject=Subject.GetAttribute('SubjectName').Value)
+    if CurrentUser is None or CurrentUser.IsEmpty():
+        return redirect("/login")
+    else:
+        AuthenticationModule.UpdateStreak(CurrentUser)
+        AuthenticationModule.UpdateLastActive(CurrentUser)
+
+# endpoint for creating a flashcard
+@app.route("/flashcard_creation", methods=["GET", "POST"])
+def CreateFlashcardEndpoint():
+    AuthHandling(session)
+
+    if request.method == 'POST':
+        FrontContent = request.form.get("FrontContent")
+        BackContent = request.form.get("BackContent")
+        DeckID = request.form.get("DeckID")
+        SubjectManagementModule.CreateFlashcard(FrontContent, BackContent, session["user"], DeckID)
+        return redirect("/flashcard_selection?DeckID="+str(DeckID))
+    elif request.method == "GET":
+        return render_template("authenticated/subjects/flashcard_creation.html", DeckID=request.args.get('DeckID'))
+
+# endpoint for managing a flashcard
+@app.route("/flashcard_management", methods=["GET", "POST"])
+def FlashcardManagementPage():
+    AuthHandling(session)
+ 
+@app.route("/flashcard_review", methods=["GET", "POST"])
+def FlashcardReviewPage():
+    AuthHandling(session)
+    if request.method == 'POST':
+        FlashcardID = request.form["FlashcardID"]
+        UserDifficulty = request.form["UserDifficulty"]
+
+        SubjectManagementModule.HandleReview(FlashcardID, UserDifficulty)
+
+        return True
+    elif request.method == "GET":
+        Mode = request.args.get('mode')
+        Decks = request.args.get('DeckID').split(',')
+        if Mode == "normal":
+            FlashcardsData = []
+
+            for Deck in Decks:
+                NewFlashcards = ProgramDatabase.GetAllRecords("Flashcards", AttributeValue("DeckID", "INTEGER", Deck))
+
+                for Flashcard in NewFlashcards:
+                    FlashcardsData.append(Flashcard.ConvertToDictionary())
+
+            print(FlashcardsData)
+
+            return render_template("authenticated/subjects/flashcard_review.html", FlashcardsData=FlashcardsData)
+        elif Mode == "FSRS":
+            FlashcardsData = []
+
+            for Deck in Decks:
+                NewFlashcards = ProgramDatabase.GetAllRecords("Flashcards", AttributeValue("DeckID", "INTEGER", Deck))
+
+                for Flashcard in NewFlashcards:
+                    if Flashcard.GetAttribute('NextDue').Value <= int(time.time()):
+                        FlashcardsData.append(Flashcard.ConvertToDictionary())
+
+            print(FlashcardsData)
+            return render_template("authenticated/subjects/flashcard_review.html", FlashcardsData=FlashcardsData)
+
+@app.route("/flashcard_selection", methods=["GET"])
+def FlashcardSelectionPage():
+    AuthHandling(session)
+
+    Deck = ProgramDatabase.GetRecord("Decks", AttributeValue("DeckID", "INTEGER", request.args.get('DeckID')))
+
+    if Deck is None:
+        return redirect("/deck_selection")
+
+    Flashcards = ProgramDatabase.GetAllRecords("Flashcards", AttributeValue("DeckID", "INTEGER", request.args.get('DeckID')))
+    FlashcardsData = []
+
+    for Card in Flashcards:
+        FlashcardsData.append(Card.ConvertToDictionary())
+
+    return render_template("authenticated/subjects/flashcard_selection.html", ActivePage="dashboard", DeckData=Deck.ConvertToDictionary(), FlashcardsData = FlashcardsData)
 
 @app.route("/deck_selection", methods=["GET"])
 def DeckSelectionPage():
-    if "user" not in session:
-        return render_template("login.html")
+    AuthHandling(session)
     
     Subject = ProgramDatabase.GetRecord("Subjects", AttributeValue("SubjectID", "INTEGER", request.args.get('SubjectID')))
 
     Subject.ChangeAttribute("LastReviewed", int(time.time()))
     ProgramDatabase.SaveRecord(Subject)
 
-    return render_template("authenticated/subjects/deck_selection.html", ActivePage="dashboard", Subject=Subject.GetAttribute('SubjectName').Value)
+    Decks = ProgramDatabase.GetAllRecords("Decks", AttributeValue("SubjectID", "INTEGER", Subject.GetPrimaryKey().Value))
+    DecksData = []
+
+    for Deck in Decks:
+        DecksData.append(Deck.ConvertToDictionary())
+
+    return render_template("authenticated/subjects/deck_selection.html", ActivePage="dashboard", SubjectName=Subject.GetAttribute('SubjectName').Value, DecksData=DecksData)
 
 @app.route("/dashboard", methods=["GET"])
 def DashboardPage():
-    if "user" not in session:
-        return render_template("login.html")
+    AuthHandling(session)
 
-    User: Record = AuthenticationModule.GetUserRecord(session["user"])
+    if CurrentUser is None:
+        return redirect("/login")
 
-    if User.GetAttribute("SetupComplete").Value == 0:
+    if CurrentUser.GetAttribute("SetupComplete").Value == 0:
         return redirect("/setup-subjects")
 
     SubjectRecords: list[Record] = ProgramDatabase.GetAllRecords("Subjects", AttributeValue("Username", "TEXT", session["user"]))
@@ -75,29 +154,25 @@ def DashboardPage():
 
 @app.route("/timetable", methods=["GET"])
 def TimetablePage():
-    if "user" not in session:
-        return render_template("login.html")
+    AuthHandling(session)
 
     return render_template("authenticated/timetable.html", ActivePage="timetable")
 
 @app.route("/timer", methods=["GET"])
 def TimerPage():
-    if "user" not in session:
-        return render_template("login.html")
+    AuthHandling(session)
 
     return render_template("authenticated/timer.html", ActivePage="timer")
 
 @app.route("/statistics", methods=["GET"])
 def StatisticsPage():
-    if "user" not in session:
-        return render_template("login.html")
+    AuthHandling(session)
 
     return render_template("authenticated/statistics.html", ActivePage="statistics")
 
 @app.route("/leaderboard", methods=["GET"])
 def LeaderboardPage():
-    if "user" not in session:
-        return render_template("login.html")
+    AuthHandling(session)
 
     return render_template("authenticated/leaderboard.html", ActivePage="leaderboard")
 
@@ -149,18 +224,13 @@ def RegisterPage():
 
 @app.route('/test', methods=["GET"])
 def Test():
-    #ProgramDatabase.DeleteRecord("Users", AttributeValue("Username", "", "oofsamy"))
-    #session.pop("user", None)
-    #print(session)
+    #b = SubjectManagementModule.CreateFlashcard("What are the factors affecting CPU performance?", "Clock speed, Core count, Cache size", "oofsamy", 14)
+    SubjectManagementModule.CreateFlashcard("What is Self-Concept?", "", "oofsamy", 1)
+    SubjectManagementModule.CreateFlashcard("What are gross motor skills?", "", "oofsamy", 1)
+    SubjectManagementModule.CreateFlashcard("What are fine motor skills?", "", "oofsamy", 1)
 
-    #return "test"
-
-    #Records = ProgramDatabase.GetAllRecords("Subjecsdfsdfts", AttributeValue("Username", "", "oofsamy"))
-
-    #print(Records[0].GetAttributes())
-
-    return " asda"
-
+    return "sup bro"
+    #return "hello bro \n" + b
 
 @app.route('/logout', methods=["GET"])
 def Logout():
@@ -171,7 +241,7 @@ def Logout():
 @app.route("/setup-subjects", methods=["GET", "POST"])
 def Setup():
     if "user" not in session:
-        return redirect("/login")
+        return redirect('/login')
 
     User: Record = AuthenticationModule.GetUserRecord(session["user"])
     

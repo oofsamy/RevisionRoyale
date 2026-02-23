@@ -119,6 +119,8 @@ function HandleSwitchMode(BreakTime)
         CurrentMode = 'break';
         TimeLeft = BreakTime;
         TimerTitle.textContent = "Break Time";
+        var audio = new Audio('static/alarm.mp3');
+        audio.play();
         alert("Study session over! Starting break.")
     } 
     else

@@ -1,6 +1,8 @@
 ### Library Imports
 
 from werkzeug.security import generate_password_hash, check_password_hash
+from fsrs import Scheduler, Card, Rating, State
+from datetime import datetime, timezone
 from dataclasses import dataclass
 
 import constants
@@ -81,6 +83,16 @@ class Record:
 
     def GetAttribute(self, Name: str) -> AttributeValue:
         return GetAttributeValueFromList(self.Attributes, Name)
+    
+    def ConvertToDictionary(self) -> dict:
+        ReturnDictionary = {}
+
+        for Attribute in self.GetAttributes():
+            ReturnDictionary[Attribute.Name] = Attribute.Value
+
+        ReturnDictionary[self.PrimaryKey.Name] = self.PrimaryKey.Value
+
+        return ReturnDictionary
 
 class Database:
     def __init__(self, FileName: str) -> None:
@@ -469,3 +481,59 @@ class SubjectManagement:
                 AttributeValue("Username", "TEXT", Subject.GetAttribute('Username').Value),
                 AttributeValue("SubjectID", "TEXT", Subject.GetPrimaryKey().Value)
             ])
+
+    def CreateFlashcard(self, FrontContent: str, BackContent: str, Username, DeckID):
+        return self.ProgramDatabase.CreateRecord("Flashcards", PrimaryKey = None,
+                                          AutoIncrementPrimaryKey = True,
+                                          Attributes = [AttributeValue("FrontContent", "TEXT", FrontContent),
+                                                        AttributeValue("BackContent", "TEXT", BackContent),
+                                                        AttributeValue("LastReviewed", "INTEGER", int(time.time())),
+                                                        AttributeValue("ReviewCount", "INTEGER", 0),
+                                                        AttributeValue("Priority", "INTEGER", 1),
+                                                        AttributeValue("NextDue", "INTEGER", 0),
+                                                        AttributeValue("Difficulty", "REAL", 4.0),
+                                                        AttributeValue("Stability", "REAL", 1.0),
+                                                        AttributeValue("Username", "TEXT", Username),
+                                                        AttributeValue("DeckID", "INTEGER", DeckID)])
+    
+    def HandleReview(self, FlashcardID: int, UserDifficulty: int):
+        RatingMap = {
+            1: Rating.Again,
+            2: Rating.Hard,
+            3: Rating.Good,
+            4: Rating.Easy
+        }
+
+        UserRating = RatingMap.get(UserDifficulty, Rating.Good)
+
+        OldCard = Card()
+
+        FlashcardRecord = self.ProgramDatabase.GetRecord("Flashcards", AttributeValue("FlashcardID", "INTEGER", FlashcardID))
+
+        if FlashcardRecord is None:
+            return
+        
+        FlashcardData = FlashcardRecord.ConvertToDictionary()
+        
+        if FlashcardData["ReviewCount"] > 0:
+            OldCard.stability = FlashcardData["Stability"]
+            OldCard.difficulty = FlashcardData["Difficulty"]
+            OldCard.state = State.Review
+
+            LastReviewDatetime = datetime.fromtimestamp(FlashcardData["LastReviewed"], timezone.utc)
+            OldCard.last_review = LastReviewDatetime
+
+        FSRSSchduler = Scheduler()
+        NowTime = datetime.now(timezone.utc)
+
+        UpdatedCard, ReviewLog = FSRSSchduler.review_card(OldCard, UserRating)
+
+        FlashcardRecord.ChangeAttribute("Difficulty", UpdatedCard.difficulty)
+        FlashcardRecord.ChangeAttribute("Stability", UpdatedCard.stability)
+        FlashcardRecord.ChangeAttribute("NextDue", int(UpdatedCard.due.timestamp()))
+        FlashcardRecord.ChangeAttribute("ReviewCount", FlashcardData["ReviewCount"] + 1)
+        FlashcardRecord.ChangeAttribute("LastReviewed", int(NowTime.timestamp()))
+
+        FlashcardRecord.ChangeAttribute("Priority", UserDifficulty)
+
+        self.ProgramDatabase.SaveRecord(FlashcardRecord)

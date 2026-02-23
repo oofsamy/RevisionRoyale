@@ -57,6 +57,22 @@ PREDEFINED_DECKS = {"Computer Science : OCR": ["1.1 Characteristics of Contempor
                                       "12 Turning points in Physics",
                                       "13 Electronics"],
 
+                    "Further Maths : Edexcel": [
+                            "Core Pure 1: Proof",
+                            "Core Pure 1: Complex Numbers",
+                            "Core Pure 1: Matrices",
+                            "Core Pure 1: Further Algebra and Functions",
+                            "Core Pure 1: Further Calculus",
+                            "Core Pure 1: Further Vectors",
+                            "Core Pure 2: Complex Numbers",
+                            "Core Pure 2: Series",
+                            "Core Pure 2: Methods in Calculus",
+                            "Core Pure 2: Volumes of Revolution",
+                            "Core Pure 2: Polar Coordinates",
+                            "Core Pure 2: Hyperbolic Functions",
+                            "Core Pure 2: Differential Equations"
+                        ],
+
                     "Mathematics : AQA": ["Proof",
                                           "Algebra and Functions",
                                           "Coordinate Geometry",
@@ -75,4 +91,28 @@ PREDEFINED_DECKS = {"Computer Science : OCR": ["1.1 Characteristics of Contempor
                                           "Quantities and Units in Mechanics",
                                           "Kinematics",
                                           "Forces and Newton's Laws",
-                                          "Moments"]}
+                                          "Moments"],
+                                          
+                    "BTEC Level 3 National Diploma in Health and Social Care for hillee : Pearson": ["Human Lifespan Development",
+                                                                                           "Working in Health and Social Care",
+                                                                                           "Anatomy and Physiology",
+                                                                                           "Enquiries in Current Research",
+                                                                                           "Meeting Individual Care and Supports Needs (Coursework)",
+                                                                                           "Principles of Safe Practice",
+                                                                                           "Promoting Public Health"],
+                                                                                           
+                    "Psychology : AQA": ["Social Influence",
+                                         "Memory",
+                                         "Attachment",
+                                         "Approaches in Psychology",
+                                         "Biopsychology",
+                                         "Research Methods",
+                                         "Issues and Debates in Psychology",
+                                         "Relationships",
+                                         "Schizophrenia",
+                                         "Aggression"],
+                                         
+                    "Business : Edexcel": ["Markteting and people",
+                                           "Managing business activities",
+                                           "Business decisions and strategy",
+                                           "Global business"]}

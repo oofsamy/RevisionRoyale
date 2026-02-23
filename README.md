@@ -18,6 +18,8 @@ This program relies on quite a few of external libraries which are not automatic
 
 - werkzeug
 
+- FSRS (version must be 3.1.0)
+
   
 
 For now, an automatic library installation process has not been yet implemented, but you can install each library by executing the following command into Command Prompt / Terminal.

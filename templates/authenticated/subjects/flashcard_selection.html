@@ -1,0 +1,38 @@
+{% extends "authenticated/authenticated_base.html" %}
+
+{% block app_content %}
+<div class="deck-view-wrapper">
+    <div class="deck-big-card">
+        
+        <h1 class="deck-title">{{ DeckData["DeckName"] }}</h1>
+
+        <div class="flashcards-grid-container">
+            {% if FlashcardsData %}
+                <div class="flashcards-grid">
+                    {% for Flashcard in FlashcardsData %}
+                    <a href="/flashcard_management?FlashcardID={{ Flashcard['FlashcardID'] }}" 
+                       class="flashcard-item priority-{{ Flashcard['Priority'] }}">
+                        
+                        <div class="flashcard-front">
+                            {{ Flashcard["FrontContent"] }}
+                        </div>
+                        
+                    </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-state" style="color: #502b5f; font-weight: bold; font-family: 'Courier New', monospace;">
+                    No flashcards in this deck yet. Create one below!
+                </p>
+            {% endif %}
+        </div>
+
+        <div class="review-actions" style="margin-top: 30px;">
+            <a href="/flashcard_creation?DeckID={{ DeckData['DeckID'] }}" class="btn">Create flashcard</a>
+            <a href="/flashcard_review?DeckID={{ DeckData['DeckID'] }}&mode=normal" class="btn">Review All</a>
+            <a href="/flashcard_review?DeckID={{ DeckData['DeckID'] }}&mode=FSRS" class="btn">Review Due</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
