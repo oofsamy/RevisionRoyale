@@ -810,3 +810,83 @@ h1 {
 .hidden {
     display: none !important;
 }
+
+/* Container Background (Matching your purple/red gradient vibe) */
+.leaderboard-wrapper {
+    padding: 50px;
+    display: flex;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+}
+
+/* The Main Tan Container */
+.leaderboard-card {
+    background-color: #e6cc9f; /* Cream/Tan color */
+    border-radius: 60px;
+    padding: 40px 60px;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+}
+
+/* Updated header columns for better centering */
+.leaderboard-columns {
+    display: flex;
+    margin-bottom: 25px;
+    padding: 0 10px; /* Aligns with the internal padding of the pills */
+}
+
+.column-left { 
+    flex: 1; /* Takes up the available space of the username pill */
+    text-align: center;
+    padding-left: 0; 
+}
+
+.column-right { 
+    width: 120px; /* Matches the width of the count-pill + divider margin */
+    text-align: center;
+}
+
+.column-title {
+    font-size: 24px;
+    color: #1a1a1a;
+    margin: 0;
+    display: inline-block; /* Required for the underline to fit the text exactly */
+    text-decoration: underline;
+}
+
+/* Ensure the content rows match the header alignment exactly */
+.leaderboard-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.name-pill {
+    background-color: #d9bd8c;
+    flex: 1; /* Match the header flex */
+    margin-right: 20px;
+    padding: 12px;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 22px;
+    color: black;
+}
+
+.vertical-divider {
+    width: 2px;
+    height: 50px;
+    background-color: #8a7a5f; /* Slightly darker to match image */
+    margin-right: 20px;
+}
+
+.count-pill {
+    background-color: #d9bd8c;
+    width: 100px; /* Fixed width for the cards column */
+    padding: 12px;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    color: black;
+}

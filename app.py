@@ -173,7 +173,19 @@ def StatisticsPage():
 def LeaderboardPage():
     AuthHandling(session)
 
-    return render_template("authenticated/leaderboard.html", ActivePage="leaderboard")
+    TopUsers = SubjectManagementModule.GetTopReviews(10)
+
+    UserInTop = False
+
+    for UserCountPair in TopUsers:
+        if UserCountPair[0] == session["user"]:
+            UserInTop = True
+    
+    if UserInTop == False:
+        CurrentUserReviews = SubjectManagementModule.GetUserReviews(session["user"])
+        TopUsers.append((session["user"], CurrentUserReviews))
+
+    return render_template("authenticated/leaderboard.html", ActivePage="leaderboard", TopUsers=TopUsers)
 
 @app.route("/base_auth", methods=["GET"])
 def BaseAuthPage():
@@ -270,7 +282,7 @@ def Setup():
                 AttributeValue("Priority", "REAL", 0)
             ])
 
-            SubjectManagementModule.SetupDecksForSubject(ProgramDatabase.GetRecord("Subjects", AttributeValue("SubjectName", "TEXT", SelectedSubjects[Index])))
+            SubjectManagementModule.SetupDecksForSubject(ProgramDatabase.GetRecord("Subjects", AttributeValue("SubjectID", "TEXT", ProgramDatabase.GetCursor().lastrowid)))
 
         User.ChangeAttribute("SetupComplete", 1)
         ProgramDatabase.SaveRecord(User)

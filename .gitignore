@@ -4,3 +4,4 @@
 **/*.pyc
 *.lnk
 test.py
+data/ProgramDatabase.db

@@ -151,6 +151,12 @@ class Database:
                            ForeignKeyAttributes=[
                                ForeignKeyAttributeValue("TimetableSlotID", "INTEGER", None, "TimetableSlots", "TimetableSlotID")])
         
+    def GetConnection(self):
+        return self.Connection
+    
+    def GetCursor(self):
+        return self.Cursor
+
     ### Generates a table within the chosen database file
     ### Required arguments are: TableName and Primary Key
     ### Optional arguments are: AutoIncrementPrimaryKey, Attributes, ForeignKeyAttributes
@@ -520,3 +526,45 @@ class SubjectManagement:
         FlashcardRecord.ChangeAttribute("Priority", UserDifficulty)
 
         self.ProgramDatabase.SaveRecord(FlashcardRecord)
+
+    ## REMEDIAL DEVELOPMENT, DIDNT HAVE '' AROUND FORMAT USERNAME
+
+    def GetUserReviews(self, Username: str):
+        Cursor = self.ProgramDatabase.GetCursor()
+
+        Query = f"""
+            SELECT 
+                SUM(f.ReviewCount) AS total_reviews
+            FROM Users u
+            JOIN Decks d ON u.Username = d.Username
+            JOIN Flashcards f ON d.DeckID = f.DeckID
+            WHERE u.Username = \'{Username}\';
+        """
+
+        Cursor.execute(Query)
+        UserCount = Cursor.fetchone()
+
+        if UserCount[0] is None:
+            return 0
+        else:
+            return UserCount[0]
+
+        return UserCount[0]
+    ## Remedial development, LIMIT SPACE
+
+    def GetTopReviews(self, Num: int) -> list:
+        Cursor = self.ProgramDatabase.GetCursor()
+
+        Query = f"""
+            SELECT u.Username, SUM(f.ReviewCount) AS TotalReviews
+            FROM Users u
+            JOIN Decks d ON u.Username = d.Username
+            JOIN Flashcards f ON d.DeckID = f.DeckID
+            GROUP BY u.Username
+            ORDER BY TotalReviews DESC
+            LIMIT {Num}"""
+        
+        Cursor.execute(Query)
+        TopUsers = Cursor.fetchall()
+
+        return (TopUsers)

@@ -1,5 +1,39 @@
 {% extends "authenticated/authenticated_base.html" %}
 
 {% block app_content %}
-    <h1>Welcome to {{ ActivePage }}, {{ session['user'] }}!</h1>
+
+<div class="leaderboard-wrapper">
+    <div class="leaderboard-card">
+        
+        <div class="leaderboard-columns">
+            <div class="column-left">
+                <h2 class="column-title underline">Username</h2>
+            </div>
+            <div class="column-right">
+                <h2 class="column-title underline">Cards</h2>
+            </div>
+        </div>
+
+        <div class="leaderboard-content">
+            {% for UserTuple in TopUsers %}
+            <div class="leaderboard-row">
+                <div class="name-pill">
+                    {% if UserTuple[0] == session["user"] %}
+                        You - {{ UserTuple[0] }}
+                    {% else %}
+                        {{ UserTuple[0] }}
+                    {% endif %}
+                </div>
+                
+                <div class="vertical-divider"></div>
+
+                <div class="count-pill">
+                    {{ UserTuple[1] }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 {% endblock %}
+

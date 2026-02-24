@@ -50,7 +50,7 @@
         let AllIDs = [];
         AllElements.forEach(el => AllIDs.push(el.getAttribute('data-id')));
 
-        window.location.href = `/flashcard_review?DeckID=${AllIDs.join(',')}`;
+        window.location.href = `/flashcard_review?mode=normal&DeckID=${AllIDs.join(',')}`;
     }
 
     function ReviewSelected() {
@@ -60,7 +60,7 @@
         let SelectedIDs = [];
         SelectedElements.forEach(element => SelectedIDs.push(element.getAttribute('data-id')));
 
-        window.location.href = `/flashcard_review?DeckID=${SelectedIDs.join(',')}`;
+        window.location.href = `/flashcard_review?mode=normal&DeckID=${SelectedIDs.join(',')}`;
     }
 </script>
 {% endblock %}
