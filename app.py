@@ -20,21 +20,26 @@ def AuthHandling(Session):
     global CurrentUser
 
     if "user" not in Session:
-        return redirect("/login")
+        return False
 
     if CurrentUser is None or CurrentUser.IsEmpty():
         CurrentUser = AuthenticationModule.GetUserRecord(session["user"])
 
-    if CurrentUser is None or CurrentUser.IsEmpty():
-        return redirect("/login")
-    else:
-        AuthenticationModule.UpdateStreak(CurrentUser)
-        AuthenticationModule.UpdateLastActive(CurrentUser)
+        if CurrentUser is None or CurrentUser.IsEmpty():
+            return False
+
+    AuthenticationModule.UpdateStreak(CurrentUser)
+    AuthenticationModule.UpdateLastActive(CurrentUser)
+
+    return True
 
 # endpoint for creating a flashcard
 @app.route("/flashcard_creation", methods=["GET", "POST"])
 def CreateFlashcardEndpoint():
-    AuthHandling(session)
+    Authenticated = AuthHandling(session)
+
+    if Authenticated == False:
+        return redirect("/login")
 
     if request.method == 'POST':
         FrontContent = request.form.get("FrontContent")
@@ -48,11 +53,25 @@ def CreateFlashcardEndpoint():
 # endpoint for managing a flashcard
 @app.route("/flashcard_management", methods=["GET", "POST"])
 def FlashcardManagementPage():
-    AuthHandling(session)
+    Authenticated = AuthHandling(session)
+
+    if Authenticated == False:
+        return redirect("/login")
+
+    FlashcardRecord: Record = ProgramDatabase.GetRecord("Flashcards", AttributeValue("FlashcardID", "INTEGER", request.args.get('FlashcardID')))
+
+    if FlashcardRecord.IsEmpty():
+        return redirect("/dashboard")
+
+    return render_template("authenticated/subjects/flashcard_management.html", FlashcardID=request.args.get('FlashcardID'), FlashcardData=FlashcardRecord.ConvertToDictionary())
  
 @app.route("/flashcard_review", methods=["GET", "POST"])
 def FlashcardReviewPage():
-    AuthHandling(session)
+    Authenticated = AuthHandling(session)
+
+    if Authenticated == False:
+        return redirect("/login")
+
     if request.method == 'POST':
         FlashcardID = request.form["FlashcardID"]
         UserDifficulty = request.form["UserDifficulty"]
@@ -87,7 +106,10 @@ def FlashcardReviewPage():
 
 @app.route("/flashcard_selection", methods=["GET"])
 def FlashcardSelectionPage():
-    AuthHandling(session)
+    Authenticated = AuthHandling(session)
+
+    if Authenticated == False:
+        return redirect("/login")
 
     Deck = ProgramDatabase.GetRecord("Decks", AttributeValue("DeckID", "INTEGER", request.args.get('DeckID')))
 
@@ -104,7 +126,10 @@ def FlashcardSelectionPage():
 
 @app.route("/deck_selection", methods=["GET"])
 def DeckSelectionPage():
-    AuthHandling(session)
+    Authenticated = AuthHandling(session)
+
+    if Authenticated == False:
+        return redirect("/login")
     
     Subject = ProgramDatabase.GetRecord("Subjects", AttributeValue("SubjectID", "INTEGER", request.args.get('SubjectID')))
 
@@ -121,9 +146,9 @@ def DeckSelectionPage():
 
 @app.route("/dashboard", methods=["GET"])
 def DashboardPage():
-    AuthHandling(session)
+    Authenticated = AuthHandling(session)
 
-    if CurrentUser is None:
+    if Authenticated == False:
         return redirect("/login")
 
     if CurrentUser.GetAttribute("SetupComplete").Value == 0:
@@ -153,25 +178,37 @@ def DashboardPage():
 
 @app.route("/timetable", methods=["GET"])
 def TimetablePage():
-    AuthHandling(session)
+    Authenticated = AuthHandling(session)
+
+    if Authenticated == False:
+        return redirect("/login")
 
     return render_template("authenticated/timetable.html", ActivePage="timetable")
 
 @app.route("/timer", methods=["GET"])
 def TimerPage():
-    AuthHandling(session)
+    Authenticated = AuthHandling(session)
+
+    if Authenticated == False:
+        return redirect("/login")
 
     return render_template("authenticated/timer.html", ActivePage="timer")
 
 @app.route("/statistics", methods=["GET"])
 def StatisticsPage():
-    AuthHandling(session)
+    Authenticated = AuthHandling(session)
+
+    if Authenticated == False:
+        return redirect("/login")
 
     return render_template("authenticated/statistics.html", ActivePage="statistics")
 
 @app.route("/leaderboard", methods=["GET"])
 def LeaderboardPage():
-    AuthHandling(session)
+    Authenticated = AuthHandling(session)
+
+    if Authenticated == False:
+        return redirect("/login")
 
     TopUsers = SubjectManagementModule.GetTopReviews(10)
 
@@ -215,7 +252,7 @@ def LoginPage():
 
 @app.route("/register", methods=["GET", "POST"])
 def RegisterPage():
-    if "user" in session:
+    if "user" in session and ((CurrentUser is None) == False):
         return redirect("/dashboard")
 
     ErrorMessage = (False, "")

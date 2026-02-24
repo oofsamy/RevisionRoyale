@@ -66,6 +66,9 @@ PREDEFINED_DECKS = {
     "Geography : AQA": ["1 Water and carbon cycles", "2 Hot desert systems and landscapes", "3 Coastal systems and landscapes", "4 Glacial systems and landscapes", "5 Hazards", "6 Contemporary urban environments", "7 Global systems and global governance", "8 Changing places"],
     "Geography : Edexcel": ["Area of study 1: Dynamic Landscapes", "Area of study 2: Dynamic Places", "Area of study 3: Physical Systems and Sustainability", "Area of study 4: Human Systems and Geopolitics"],
 
+    # --- PHYSICS ---
+    "Physics : AQA": ["1 Measurements and Their Errors", "2 Particles and Radiation", "3 Waves", "4 Mechanics and Materials", "5 Electricity", "6.1 Further Mechanics", "6.2 Thermal Physics", "7 Fields and Their Consequences", "8 Nuclear Physics", "9 Astrophysics", "10 Medical Physics", "11 Engineering Physics", "12 Turning points in Physics", "13 Electronics"],
+
     # --- PSYCHOLOGY ---
     "Psychology : AQA": ["1 Social influence", "2 Memory", "3 Attachment", "4 Psychopathology", "5 Approaches in Psychology", "6 Biopsychology", "7 Research methods", "8 Issues and debates in Psychology"],
     "Psychology : Edexcel": ["1 Social psychology", "2 Cognitive psychology", "3 Biological psychology", "4 Learning theories", "5 Clinical psychology", "6 Criminological psychology", "7 Child psychology", "8 Health psychology"],
