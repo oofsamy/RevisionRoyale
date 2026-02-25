@@ -890,3 +890,30 @@ h1 {
     font-weight: bold;
     color: black;
 }
+
+/* Add this to style.css for the new Statistics tab */
+.stats-content {
+    width: 100%;
+    height: 250px;
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+    color: #333;
+    text-align: left; /* Overrides the centering for bullet points */
+    padding: 0 40px;
+    overflow-y: auto; /* Adds a scrollbar if they have lots of stats */
+}
+
+.stats-content p {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+}
+
+.stats-content ul {
+    margin-bottom: 15px;
+    padding-left: 20px;
+    list-style-type: square;
+}
+
+.stats-content li {
+    margin-bottom: 5px;
+}

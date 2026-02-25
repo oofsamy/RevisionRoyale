@@ -63,7 +63,19 @@ def FlashcardManagementPage():
     if FlashcardRecord.IsEmpty():
         return redirect("/dashboard")
 
-    return render_template("authenticated/subjects/flashcard_management.html", FlashcardID=request.args.get('FlashcardID'), FlashcardData=FlashcardRecord.ConvertToDictionary())
+    FlashcardData = FlashcardRecord.ConvertToDictionary()
+
+    LastReviewed = arrow.get(FlashcardData["LastReviewed"]).humanize()
+    NextDue = arrow.get(FlashcardData["NextDue"]).humanize()
+
+    ## Remedial development, for nextdue/lastreviewed = 0, displays 56 years ago instead.
+
+    if FlashcardData["LastReviewed"] == 0:
+        LastReviewed = "Never"
+    if FlashcardData["NextDue"] == 0:
+        NextDue = "Never"
+
+    return render_template("authenticated/subjects/flashcard_management.html", FlashcardData=FlashcardData, LastReviewed=LastReviewed, NextDue=NextDue)
  
 @app.route("/flashcard_review", methods=["GET", "POST"])
 def FlashcardReviewPage():

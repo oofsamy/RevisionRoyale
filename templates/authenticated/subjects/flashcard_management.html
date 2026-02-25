@@ -1,0 +1,116 @@
+{% extends "authenticated/authenticated_base.html" %}
+
+{% block app_content %}
+<div class="deck-view-wrapper">
+    <div class="deck-big-card">
+        
+        <h1 class="deck-title">Manage Flashcard</h1>
+
+        <div class="side-toggle-container">
+            <button class="toggle-btn active" id="btn-front" onclick="SwitchSide('front')">Front</button>
+            <button class="toggle-btn" id="btn-stats" onclick="SwitchSide('stats')">Statistics</button>
+            <button class="toggle-btn" id="btn-back" onclick="SwitchSide('back')">Back</button>
+        </div>
+
+        <div class="flashcard-editor">
+            <textarea id="flashcard-input" class="flashcard-textarea" placeholder="Type the front of the flashcard here...">{{ FlashcardData["FrontContent"] | default('') }}</textarea>
+            
+            <div id="statistics-view" class="stats-content hidden">
+                <p><strong>Statistics:</strong></p>
+                <ul>
+                    <li>Review Count: {{FlashcardData["ReviewCount"]}}</li>
+                    <li>Last Reviewed: {{LastReviewed}}</li>
+                    <li>Next Due: {{NextDue}}</li>
+                </ul>
+                <br>
+                <p><strong>Debugging information:</strong></p>
+                <ul>
+                    <li>Stability: {{FlashcardData["Stability"]}}</li>
+                    <li>Difficulty: {{FlashcardData["Difficulty"]}}</li>
+                </ul>
+            </div>
+        </div>
+
+        <form id="flashcard-form" action="/flashcard_management" method="POST" style="display: none;">
+            <input type="hidden" name="FlashcardID" value="{{ FlashcardID }}">
+            <input type="hidden" name="FrontContent" id="hidden-front">
+            <input type="hidden" name="BackContent" id="hidden-back">
+        </form>
+
+        <div class="review-actions" style="margin-top: 30px;">
+            <button type="button" class="btn" onclick="SubmitFlashcard()">Save Flashcard</button>
+            <a href="/flashcard_selection?DeckID={{ FlashcardData['DeckID'] }}" class="btn outline-btn cancel-btn">Cancel</a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Pre-load with existing content if managing an existing card, or empty strings if creating new
+    let FrontText = `{{ FlashcardData["FrontContent"] | default('') }}`;
+    let BackText = `{{ FlashcardData["BackContent"] | default('') }}`;
+    let CurrentSide = "front";
+
+    const TextArea = document.getElementById('flashcard-input');
+    const StatsView = document.getElementById('statistics-view');
+    const ButtonFront = document.getElementById('btn-front');
+    const ButtonBack = document.getElementById('btn-back');
+    const ButtonStats = document.getElementById('btn-stats');
+
+    function SwitchSide(TargetSide) {
+        if (TargetSide === CurrentSide) return;
+
+        if (CurrentSide === 'front') {
+            FrontText = TextArea.value;
+        } else if (CurrentSide === 'back') {
+            BackText = TextArea.value;
+        }
+
+        CurrentSide = TargetSide;
+
+        ButtonFront.classList.remove('active');
+        ButtonBack.classList.remove('active');
+        ButtonStats.classList.remove('active');
+
+        if (CurrentSide === 'front') {
+            TextArea.classList.remove('hidden');
+            StatsView.classList.add('hidden');
+            
+            TextArea.value = FrontText;
+            TextArea.placeholder = "Type the front of the flashcard here...";
+            ButtonFront.classList.add('active');
+            
+        } else if (CurrentSide === 'back') {
+            TextArea.classList.remove('hidden');
+            StatsView.classList.add('hidden');
+            
+            TextArea.value = BackText;
+            TextArea.placeholder = "Type the back (answer) of the flashcard here...";
+            ButtonBack.classList.add('active');
+            
+        } else if (CurrentSide === 'stats') {
+            TextArea.classList.add('hidden');
+            StatsView.classList.remove('hidden');
+            ButtonStats.classList.add('active');
+        }
+    }
+
+    function SubmitFlashcard() {
+        if (CurrentSide === 'front') {
+            FrontText = TextArea.value;
+        } else if (CurrentSide === 'back') {
+            BackText = TextArea.value;
+        }
+
+        document.getElementById('hidden-front').value = FrontText;
+        document.getElementById('hidden-back').value = BackText;
+
+        if (FrontText.trim() === "" || BackText.trim() === "") {
+            alert("Both the front and back of the flashcard must have text!");
+            return;
+        }
+
+        document.getElementById('flashcard-form').submit();
+    }
+</script>
+{% endblock %}
