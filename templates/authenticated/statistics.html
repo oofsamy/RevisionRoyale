@@ -1,5 +1,125 @@
 {% extends "authenticated/authenticated_base.html" %}
 
 {% block app_content %}
-    <h1>Welcome back, {{ session['user'] }}!</h1>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="deck-view-wrapper">
+    <div class="deck-big-card stats-card">
+
+        <h2 class="stats-title">Statistics</h2>
+
+        <div class="stats-summary">
+            <div class="stat-item">
+                <span class="stat-label">Total Reviews </span>
+                <span class="stat-value">{{ TotalReviews }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label"> Current Streak</span>
+                <span class="stat-value">{{ Streak }} Days</span>
+            </div>
+        </div>
+
+        <div class="chart-container" style="position: relative; height:40vh; width:100%">
+            <canvas id="progressChart"></canvas>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // 1. Capture the nested array from Flask: [['Subject', Count], ...]
+    const rawData = {{ SubjectData | tojson | safe }};
+
+    // 2. Map the nested arrays into separate lists for Chart.js
+    const chartLabels = rawData.map(pair => pair[0]); // Extracts names
+    const chartValues = rawData.map(pair => pair[1]); // Extracts counts
+
+    const ctx = document.getElementById('progressChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Total Reviews',
+                data: chartValues,
+                backgroundColor: '#9b052c', // Royale Red
+                borderColor: '#502b5f',     // Royale Purple
+                borderWidth: 2,
+                borderRadius: 8,
+                hoverBackgroundColor: '#502b5f'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return ` ${context.parsed.y} cards mastered`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Cards Reviewed',
+                        font: { weight: 'bold', family: 'monospace' }
+                    },
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { family: 'monospace', size: 12 }
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+<style>
+    /* Add this to your CSS file or a style block to clean up the UI */
+    .stats-title {
+        text-align: center;
+        color: #502b5f;
+        margin-bottom: 20px;
+        font-family: 'consolas';
+    }
+
+    .stats-summary {
+        display: flex;
+        justify-content: space-around;
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        border: 1px solid #ddd;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding:10px;
+    }
+
+    .stat-label {
+        display: block;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: #666;
+        font-weight: bold;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #9b052c;
+    }
+</style>
 {% endblock %}
