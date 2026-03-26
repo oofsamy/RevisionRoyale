@@ -45,7 +45,7 @@ def CreateFlashcardEndpoint():
         FrontContent = request.form.get("FrontContent")
         BackContent = request.form.get("BackContent")
         DeckID = request.form.get("DeckID")
-        SubjectManagementModule.CreateFlashcard(FrontContent, BackContent, session["user"], DeckID)
+        print(SubjectManagementModule.CreateFlashcard(FrontContent, BackContent, session["user"], DeckID))
         return redirect("/flashcard_selection?DeckID="+str(DeckID))
     elif request.method == "GET":
         return render_template("authenticated/subjects/flashcard_creation.html", DeckID=request.args.get('DeckID'))
@@ -213,7 +213,16 @@ def StatisticsPage():
     if Authenticated == False:
         return redirect("/login")
 
-    return render_template("authenticated/statistics.html", ActivePage="statistics")
+    UserSubjects = ProgramDatabase.GetAllRecords("Subjects", AttributeValue("Username", "TEXT", session["user"]))
+    SubjectCounts = []
+
+    for Subject in UserSubjects:
+        SubjectCounts.append([Subject.GetAttribute("SubjectName").Value, SubjectManagementModule.GetUserReviewsForSubject(Subject.GetPrimaryKey().Value)])
+
+    return render_template("authenticated/statistics.html", ActivePage="statistics",
+                           SubjectData = SubjectCounts,
+                           TotalReviews = SubjectManagementModule.GetUserReviews(session["user"]),
+                           Streak = CurrentUser.GetAttribute("Streak").Value)
 
 @app.route("/leaderboard", methods=["GET"])
 def LeaderboardPage():

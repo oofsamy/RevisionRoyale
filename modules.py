@@ -196,6 +196,8 @@ class Database:
         AttributeNames = []
         AttributeValues = []
 
+        ## Might be a huge remedial development, if flashcard has a ' in it, it won't work, use the ? sqlite blah
+
         if AutoIncrementPrimaryKey == False and PrimaryKey != None:  ## Validates if a primary key actually exists or if AutoIncrement is off
             AttributeNames.append(PrimaryKey.Name)
             AttributeValues.append(f"'{str(PrimaryKey.Value)}'")
@@ -568,3 +570,16 @@ class SubjectManagement:
         TopUsers = Cursor.fetchall()
 
         return (TopUsers)
+
+    def GetUserReviewsForSubject(self, SubjectID: int):
+        Query = """
+                SELECT SUM(f.ReviewCount)
+                FROM Subjects s
+                         JOIN Decks d ON s.SubjectID = d.SubjectID
+                         JOIN Flashcards f ON d.DeckId = f.DeckID
+                WHERE s.SubjectID = ?
+                """
+        Cursor = self.ProgramDatabase.GetCursor()
+        Result = Cursor.execute(Query, str(SubjectID)).fetchone()
+
+        return Result[0] if Result[0] is not None else 0
