@@ -27,10 +27,8 @@
 </div>
 
 <script>
-    // 1. Capture the nested array from Flask: [['Subject', Count], ...]
     const rawData = {{ SubjectData | tojson | safe }};
 
-    // 2. Map the nested arrays into separate lists for Chart.js
     const chartLabels = rawData.map(pair => pair[0]); // Extracts names
     const chartValues = rawData.map(pair => pair[1]); // Extracts counts
 
@@ -43,8 +41,8 @@
             datasets: [{
                 label: 'Total Reviews',
                 data: chartValues,
-                backgroundColor: '#9b052c', // Royale Red
-                borderColor: '#502b5f',     // Royale Purple
+                backgroundColor: '#9b052c',
+                borderColor: '#502b5f',
                 borderWidth: 2,
                 borderRadius: 8,
                 hoverBackgroundColor: '#502b5f'

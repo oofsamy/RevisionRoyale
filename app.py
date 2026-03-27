@@ -90,7 +90,7 @@ def FlashcardReviewPage():
 
         SubjectManagementModule.HandleReview(FlashcardID, UserDifficulty)
 
-        return True
+        return "True"
     elif request.method == "GET":
         Mode = request.args.get('mode')
         Decks = request.args.get('DeckID').split(',')
@@ -195,7 +195,9 @@ def TimetablePage():
     if Authenticated == False:
         return redirect("/login")
 
-    return render_template("authenticated/timetable.html", ActivePage="timetable")
+    GeneratedSchedule = SubjectManagementModule.GetWeightedSchedule(session["user"])
+
+    return render_template("authenticated/timetable.html", ActivePage="timetable", Schedule=GeneratedSchedule)
 
 @app.route("/timer", methods=["GET"])
 def TimerPage():

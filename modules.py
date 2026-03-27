@@ -38,6 +38,10 @@ def GetAttributeValueFromList(Attributes: list[AttributeValue], Name: str) -> At
 
     return None
 
+def FormatMinsToTime(Mins):
+    Hours = Mins // 60
+    Minutes = Mins % 60
+    return f"{Hours:02d}:{Minutes:02d}"
 
 ## Class Definitions
 
@@ -583,3 +587,60 @@ class SubjectManagement:
         Result = Cursor.execute(Query, str(SubjectID)).fetchone()
 
         return Result[0] if Result[0] is not None else 0
+    
+    def CalculateSubjectPriority(self, SubjectID: int) -> float:
+        Cursor = self.ProgramDatabase.GetCursor()
+        Cards = Cursor.execute('SELECT Priority FROM Flashcards f JOIN Decks d ON f.DeckID = d.DeckID WHERE d.SubjectID = ?', (SubjectID,)).fetchall()
+
+        if not Cards:
+            return 1.0 ## Default value to return
+        
+        AveragePriority = sum([Card[0] for Card in Cards]) / len(Cards)
+        RoundedPriority = round(AveragePriority / 0.05) * 0.05 ## Has to fit in 5% hourly blocks
+
+        return RoundedPriority
+    
+    def GetWeightedSchedule(self, Username: str, DayStart="09:00", DayEnd="21:00"):
+        Cursor = self.ProgramDatabase.GetCursor()
+        Subjects = Cursor.execute("SELECT SubjectID, SubjectName FROM Subjects WHERE Username = ?", (Username,)).fetchall()
+        TotalPriority = 0
+
+        WeightedSubjects = []
+
+        for Subject in Subjects:
+            Priority = self.CalculateSubjectPriority(Subject[0])
+
+            WeightedSubjects.append({
+                "SubjectID": Subject[0],
+                "Name": Subject[1],
+                "Priority": Priority
+            })
+
+            TotalPriority = TotalPriority + Priority
+
+        print(WeightedSubjects)
+
+        StartMins = int(DayStart.split(':')[0]) * 60 + int(DayStart.split(':')[1])
+        EndMins = int(DayEnd.split(':')[0]) * 60 + int(DayEnd.split(':')[1])
+        TotalMins = EndMins - StartMins
+
+        Schedule = []
+        CurrentPointer = StartMins
+
+        for Subject in WeightedSubjects:
+            Share = Subject["Priority"] / TotalPriority
+            Duration = int(Share * TotalMins)
+
+            SlotStarts = FormatMinsToTime(CurrentPointer)
+            SlotEnds = FormatMinsToTime(CurrentPointer + Duration)
+
+            Schedule.append({
+                'SubjectName': Subject["Name"],
+                'Start': SlotStarts,
+                'End': SlotEnds,
+                'Duration': Duration 
+            })
+
+            CurrentPointer = CurrentPointer + Duration
+
+        return Schedule
